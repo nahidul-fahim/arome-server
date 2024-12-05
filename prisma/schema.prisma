@@ -7,12 +7,137 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
+enum UserRole {
+  ADMIN
+  VENDOR
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String     @id @unique @default(uuid())
+  email     String     @unique
+  password  String
+  role      UserRole
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Admin     Admin?
+  Vendor    Vendor?
+
+  @@map("users")
+}
+
+model Admin {
+  id           String   @id @unique @default(uuid())
+  name         String
+  email        String   @unique
+  profilePhoto String?
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [email], references: [email])
+
+  @@map("admins")
+}
+
+model Vendor {
+  id          String    @id @unique @default(uuid())
+  userId      String    @unique
+  shopName    String
+  email       String    @unique
+  logo        String?
+  description String?
+  isDeleted   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+  orders      Order[]
+  user        User      @relation(fields: [email], references: [email])
+
+  @@map("vendors")
+}
+
+model Product {
+  id          String      @id @unique @default(uuid())
+  name        String
+  price       Float
+  categoryId  String
+  inventory   Int
+  description String?
+  images      String[]
+  discount    Float?
+  vendorId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  vendor      Vendor      @relation(fields: [vendorId], references: [id])
+  category    Category    @relation(fields: [categoryId], references: [id])
+  reviews     Review[]
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  vendorId    String
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  vendor      Vendor      @relation(fields: [vendorId], references: [id])
+  orderItems  OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  authorId  Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("reviews")
 }

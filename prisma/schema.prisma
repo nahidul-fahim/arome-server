@@ -10,7 +10,7 @@ datasource db {
 enum UserRole {
   ADMIN
   VENDOR
-  USER
+  CUSTOMER
 }
 
 enum UserStatus {
@@ -36,8 +36,22 @@ model User {
   updatedAt DateTime   @updatedAt
   Admin     Admin?
   Vendor    Vendor?
+  Customer  Customer?
 
   @@map("users")
+}
+
+model Customer {
+  id           String   @id @unique @default(uuid())
+  name         String
+  email        String   @unique
+  profilePhoto String?
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [email], references: [email])
+
+  @@map("customers")
 }
 
 model Admin {
@@ -54,18 +68,18 @@ model Admin {
 }
 
 model Vendor {
-  id          String    @id @unique @default(uuid())
-  userId      String    @unique
-  shopName    String
-  email       String    @unique
-  logo        String?
-  description String?
-  isDeleted   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  products    Product[]
-  orders      Order[]
-  user        User      @relation(fields: [email], references: [email])
+  id            String    @id @unique @default(uuid())
+  shopName      String
+  isBlacklisted Boolean   @default(false)
+  email         String    @unique
+  logo          String?
+  description   String?
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  products      Product[]
+  orders        Order[]
+  user          User      @relation(fields: [email], references: [email])
 
   @@map("vendors")
 }

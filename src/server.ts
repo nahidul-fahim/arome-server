@@ -1,13 +1,11 @@
 import { Server } from "http";
 import app from "./app";
-
-const port = 5000;
+import config from "./config";
 
 async function main() {
-    const server: Server = app.listen(port, () => {
-        console.log(`Library Management System running on port ${port}`);
+    const server: Server = app.listen(config.port, () => {
+        console.log(`Arome server is running on port ${config.port}`);
     })
 }
-
 
 main();

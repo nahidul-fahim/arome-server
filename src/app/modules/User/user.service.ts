@@ -38,7 +38,6 @@ const createNewVendorIntoDb = async (data: any) => {
     const vendor = await tx.vendor.create({
       data: {
         shopName: data.shopName,
-        userId: data.userId,
         email: data.email,
         logo: data.logo,
         description: data.description,

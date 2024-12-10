@@ -13,7 +13,7 @@ const customerValidation = z.object({
     }).email({ message: "Invalid email format" }),
 
     password: z.string({
-      invalid_type_error: "Password must be a valid date",
+      invalid_type_error: "Password must be a string",
       required_error: "Password date is required",
     }).min(6, { message: "Password must be at least 6 characters long" }),
 

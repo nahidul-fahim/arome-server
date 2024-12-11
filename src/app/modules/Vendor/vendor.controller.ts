@@ -18,17 +18,29 @@ const getAllVendors = catchAsync(async (req, res) => {
 
 // get single vendor
 const singleVendor = catchAsync(async (req, res) => {
-  const tokenEmail = req.user?.email;
-  const result = await VendorServices.getSingleVendorFromDb(req.params.id, tokenEmail as string);
+  const result = await VendorServices.getSingleVendorFromDb(req.params.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Vendor fetched successfully!",
     data: result
   })
+});
+
+// update vendor
+const updateVendor = catchAsync(async (req, res) => {
+  const cloudinaryResult = req.cloudinaryResult;
+  const result = await VendorServices.updateVendorIntoDb(cloudinaryResult, req.params.id, req.body);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Vendor updated successfully!",
+    data: result
+  })
 })
 
 export const VendorController = {
   getAllVendors,
-  singleVendor
+  singleVendor,
+  updateVendor
 }

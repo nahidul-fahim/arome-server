@@ -1,3 +1,4 @@
+import { UploadApiResponse } from "cloudinary";
 import "express";
 
 declare global {
@@ -9,6 +10,7 @@ declare global {
         iat: number,
         exp: number
       };
+      cloudinaryResult?: UploadApiResponse;
     }
   }
 }

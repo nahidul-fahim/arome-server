@@ -34,7 +34,6 @@ export const sendImageToCloudinary = async (req: Request, res: Response, next: N
 
         // Attach the Cloudinary response to the request object
         req.cloudinaryResult = uploadedImage;
-        console.log(req.cloudinaryResult);
         next();
     } catch (error) {
         res.status(500).json({ error: 'Failed to upload image' });

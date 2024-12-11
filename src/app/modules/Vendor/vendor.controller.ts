@@ -2,8 +2,6 @@ import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../../shared/catch-async";
 import sendResponse from "../../../shared/send-response";
 import { VendorServices } from "./vendor.service";
-import { Request, Response } from "express";
-import { IUser } from "../../../interfaces/user-interface";
 
 // get all vendors
 const getAllVendors = catchAsync(async (req, res) => {
@@ -37,10 +35,22 @@ const updateVendor = catchAsync(async (req, res) => {
     message: "Vendor updated successfully!",
     data: result
   })
-})
+});
+
+// delete vendor
+const deleteVendor = catchAsync(async (req, res) => {
+  const result = await VendorServices.deleteVendorFromDb(req.params.id);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Vendor deleted successfully!",
+    data: result
+  })
+});
 
 export const VendorController = {
   getAllVendors,
   singleVendor,
-  updateVendor
+  updateVendor,
+  deleteVendor
 }

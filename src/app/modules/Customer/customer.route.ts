@@ -1,40 +1,40 @@
 import express, { NextFunction, Request, Response } from "express";
 import auth from "../../../middlewares/auth";
 import { UserRole } from "@prisma/client";
-import { VendorController } from "./vendor.controller";
 import { sendImageToCloudinary, upload } from "../../../utils/send-image-to-cloudinary";
+import { CustomerController } from "./customer.controller";
 
 const router = express.Router();
 
 router.get(
   "/",
   auth(UserRole.ADMIN),
-  VendorController.getAllVendors
+  CustomerController.getAllCustomers
 )
 
 router.get(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.VENDOR),
-  VendorController.singleVendor
+  auth(UserRole.ADMIN, UserRole.CUSTOMER),
+  CustomerController.singleCustomer
 )
 
 router.patch(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.VENDOR),
+  auth(UserRole.ADMIN, UserRole.CUSTOMER),
   upload.single('file'),
   sendImageToCloudinary,
   (req: Request, res: Response, next: NextFunction) => {
     req.body = JSON.parse(req.body.data);
     next();
   },
-  VendorController.updateVendor
+  CustomerController.updateCustomer
 )
 
 router.delete(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.VENDOR),
-  VendorController.deleteVendor
+  auth(UserRole.ADMIN, UserRole.CUSTOMER),
+  CustomerController.deleteCustomer
 )
 
 
-export const vendorRoutes = router;
+export const customerRoutes = router;

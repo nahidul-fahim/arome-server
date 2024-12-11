@@ -1,10 +1,13 @@
 import bcrypt from 'bcrypt';
 import prisma from "../../../shared/prisma";
 import { UserRole } from '@prisma/client';
+import { jwtHelpers } from '../../../helpers/jwt-helpers';
+import { Secret } from 'jsonwebtoken';
+import config from '../../../config';
 
 const createNewCustomerIntoDb = async (data: any) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
-  const result = await prisma.$transaction(async (tx) => {
+  const newCustomer = await prisma.$transaction(async (tx) => {
     await tx.user.create({
       data: {
         email: data.email,
@@ -20,14 +23,37 @@ const createNewCustomerIntoDb = async (data: any) => {
     })
     return customer;
   });
-  return result;
+
+  const accessToken = jwtHelpers.generateToken(
+    {
+      email: newCustomer.email,
+      role: UserRole.CUSTOMER,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.jwt_expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.generateToken(
+    {
+      email: newCustomer.email,
+      role: UserRole.CUSTOMER,
+    },
+    config.jwt.refresh_token_secret as Secret,
+    config.jwt.refresh_token_expires_in as string
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    newCustomer
+  };
 };
 
 
 // create new vendor
 const createNewVendorIntoDb = async (data: any) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
-  const result = await prisma.$transaction(async (tx) => {
+  const newVendor = await prisma.$transaction(async (tx) => {
     await tx.user.create({
       data: {
         email: data.email,
@@ -45,7 +71,30 @@ const createNewVendorIntoDb = async (data: any) => {
     })
     return vendor;
   })
-  return result;
+
+  const accessToken = jwtHelpers.generateToken(
+    {
+      email: newVendor.email,
+      role: UserRole.VENDOR,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.jwt_expires_in as string
+  );
+
+  const refreshToken = jwtHelpers.generateToken(
+    {
+      email: newVendor.email,
+      role: UserRole.VENDOR,
+    },
+    config.jwt.refresh_token_secret as Secret,
+    config.jwt.refresh_token_expires_in as string
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    newVendor
+  };
 };
 
 

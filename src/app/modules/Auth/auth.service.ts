@@ -7,6 +7,7 @@ import { jwtHelpers } from "../../../helpers/jwt-helpers";
 import config from "../../../config";
 import { Secret } from "jsonwebtoken";
 
+// login user into db
 const loginUserIntoDb = async (payload: { email: string; password: string }) => {
   const userData = await prisma.user.findUniqueOrThrow({
     where: {
@@ -38,8 +39,6 @@ const loginUserIntoDb = async (payload: { email: string; password: string }) => 
     config.jwt.refresh_token_expires_in as string
   );
 
-  console.log({ accessToken, refreshToken });
-
   const userWithoutSensitiveData = excludeSensitiveFields(userData, ["password"]);
   return {
     accessToken,
@@ -48,6 +47,35 @@ const loginUserIntoDb = async (payload: { email: string; password: string }) => 
   };
 };
 
+// refresh token
+const refreshToken = async (token: string) => {
+  let decodedData;
+  try {
+    decodedData = jwtHelpers.verifyToken(token, config.jwt.refresh_token_secret as Secret);
+  }
+  catch (err) {
+    throw new ApiError(401, "You are not authorized!");
+  }
+
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: decodedData.email,
+      status: UserStatus.ACTIVE
+    }
+  });
+
+  const accessToken = jwtHelpers.generateToken({
+    email: userData.email,
+    role: userData.role
+  },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.jwt_expires_in as string
+  );
+
+  return accessToken;
+};
+
 export const AuthServices = {
   loginUserIntoDb,
+  refreshToken
 };

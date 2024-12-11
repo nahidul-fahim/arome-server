@@ -2,7 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../../shared/catch-async";
 import sendResponse from "../../../shared/send-response";
 import { AuthServices } from "./auth.service";
+import { Request, Response } from "express";
 
+// login user
 const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUserIntoDb(req.body);
   const { refreshToken } = result;
@@ -22,6 +24,19 @@ const loginUser = catchAsync(async (req, res) => {
   })
 });
 
+// refresh token
+const refreshToken = catchAsync(async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+  const result = await AuthServices.refreshToken(refreshToken);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Access token generated successfully!",
+    data: result
+  })
+});
+
 export const AuthController = {
   loginUser,
+  refreshToken
 };

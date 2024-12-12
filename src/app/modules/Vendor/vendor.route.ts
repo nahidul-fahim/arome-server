@@ -3,6 +3,8 @@ import auth from "../../../middlewares/auth";
 import { UserRole } from "@prisma/client";
 import { VendorController } from "./vendor.controller";
 import { sendImageToCloudinary, upload } from "../../../utils/send-image-to-cloudinary";
+import ApiError from "../../../errors/api-error";
+import { StatusCodes } from "http-status-codes";
 
 const router = express.Router();
 
@@ -24,8 +26,14 @@ router.patch(
   upload.single('file'),
   sendImageToCloudinary,
   (req: Request, res: Response, next: NextFunction) => {
-    req.body = JSON.parse(req.body.data);
-    next();
+    try {
+      if (req.body?.data) {
+        req.body = JSON.parse(req.body.data);
+      }
+      next();
+    } catch (error) {
+      next(new ApiError(StatusCodes.BAD_REQUEST, "Invalid JSON data in req.body.data"));
+    }
   },
   VendorController.updateVendor
 )

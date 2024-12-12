@@ -16,10 +16,6 @@ const customerValidation = z.object({
       invalid_type_error: "Password must be a string",
       required_error: "Password date is required",
     }).min(6, { message: "Password must be at least 6 characters long" }),
-
-    profilePhoto: z.string({
-      invalid_type_error: "Phone number must be a string",
-    }).optional()
   })
 });
 
@@ -41,10 +37,6 @@ const vendorValidation = z.object({
       invalid_type_error: "Password must be a valid date",
       required_error: "Password date is required",
     }).min(6, { message: "Password must be at least 6 characters long" }),
-
-    logo: z.string({
-      invalid_type_error: "Logo must be a string",
-    }).optional()
   })
 });
 

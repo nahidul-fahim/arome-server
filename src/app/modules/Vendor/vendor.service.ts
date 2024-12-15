@@ -1,0 +1,95 @@
+import { StatusCodes } from "http-status-codes";
+import ApiError from "../../../errors/api-error";
+import prisma from "../../../shared/prisma"
+import { IVendor } from "./vendor.interface";
+import { UserStatus } from "@prisma/client";
+import { excludeSensitiveFields } from "../../../utils/sanitize";
+
+
+// get all vendors
+const getAllVendorsFromDb = async () => {
+  const allVendors = await prisma.vendor.findMany({
+    where: {
+      isDeleted: false
+    }
+  });
+  return allVendors;
+}
+
+// get single vendor
+const getSingleVendorFromDb = async (id: string) => {
+  const vendor = await prisma.vendor.findUniqueOrThrow({
+    where: {
+      id,
+      isDeleted: false
+    }
+  });
+  return vendor;
+}
+
+// update vendor
+const updateVendorIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IVendor>) => {
+  const currentVendor = await prisma.vendor.findUniqueOrThrow({
+    where: {
+      id,
+      isDeleted: false
+    }
+  });
+  if (!currentVendor) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!")
+  }
+  if (cloudinaryResult && cloudinaryResult.secure_url) {
+    updatedData.logo = cloudinaryResult.secure_url;
+  }
+  const result = await prisma.vendor.update({
+    where: {
+      id,
+      isDeleted: false
+    },
+    data: updatedData
+  })
+  return result;
+};
+
+// delete vendor
+const deleteVendorFromDb = async (id: string) => {
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      id,
+      isDeleted: false
+    }
+  });
+  if (!vendor) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!")
+  }
+  const result = await prisma.$transaction(async (tx) => {
+    const deletedVendor = await tx.vendor.update({
+      where: {
+        id,
+        isDeleted: false
+      },
+      data: {
+        isDeleted: true
+      }
+    })
+    const deletedUser = await tx.user.update({
+      where: {
+        email: deletedVendor.email
+      },
+      data: {
+        status: UserStatus.SUSPENDED
+      }
+    })
+    const deletedInfo = excludeSensitiveFields(deletedUser, ["status", "password"]);
+    return deletedInfo;
+  })
+  return result;
+}
+
+
+export const VendorServices = {
+  getAllVendorsFromDb,
+  getSingleVendorFromDb,
+  updateVendorIntoDb,
+  deleteVendorFromDb
+}

@@ -1,0 +1,12 @@
+node_modules
+# Keep environment variables out of version control
+.env
+package-lock.json
+<<<<<<< HEAD
+.env.development
+.env.production
+=======
+.env.production
+.env.development
+.vercel
+>>>>>>> ca1f9528ab583296c1fe52bb49a1a81c45389f49

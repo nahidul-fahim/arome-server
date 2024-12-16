@@ -6,6 +6,7 @@ import ApiError from "../../../errors/api-error";
 import { jwtHelpers } from "../../../helpers/jwt-helpers";
 import config from "../../../config";
 import { Secret } from "jsonwebtoken";
+import { userSelectFields } from "./auth.constant";
 
 // login user into db
 const loginUserIntoDb = async (payload: { email: string; password: string }) => {
@@ -14,12 +15,13 @@ const loginUserIntoDb = async (payload: { email: string; password: string }) => 
       email: payload.email,
       status: UserStatus.ACTIVE,
     },
+    include: userSelectFields
   });
 
   const isCorrectPassword = await bcrypt.compare(payload.password, userData.password);
   if (!isCorrectPassword) {
     throw new ApiError(401, "Password is incorrect");
-  };
+  }
 
   const accessToken = jwtHelpers.generateToken(
     {
@@ -45,7 +47,7 @@ const loginUserIntoDb = async (payload: { email: string; password: string }) => 
   return {
     accessToken,
     refreshToken,
-    userWithoutSensitiveData
+    user: userWithoutSensitiveData
   };
 };
 

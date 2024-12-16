@@ -52,6 +52,7 @@ model Customer {
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [email], references: [email])
   Order        Order[]
+  Cart         Cart[]
 
   @@map("customers")
 }
@@ -102,6 +103,7 @@ model Product {
   category    Category    @relation(fields: [categoryId], references: [id])
   reviews     Review[]
   orderItems  OrderItem[]
+  CartItem    CartItem[]
 
   @@map("products")
 }
@@ -121,13 +123,16 @@ model Order {
   id          String      @id @default(uuid())
   customerId  String
   vendorId    String
+  couponId    String?
   status      OrderStatus @default(PENDING)
   totalAmount Float
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   vendor      Vendor      @relation(fields: [vendorId], references: [id])
   customer    Customer    @relation(fields: [customerId], references: [id])
+  coupon      Coupon?     @relation(fields: [couponId], references: [id])
   orderItems  OrderItem[]
+  Payment     Payment?
 
   @@map("orders")
 }
@@ -146,6 +151,44 @@ model OrderItem {
   @@map("order_items")
 }
 
+model Cart {
+  id         String     @id @default(uuid())
+  customerId String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  customer   Customer   @relation(fields: [customerId], references: [id])
+  cartItems  CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("cart_items")
+}
+
+model Coupon {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  description String?
+  discount    Float
+  isActive    Boolean   @default(true)
+  expiryDate  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  orders      Order[]
+
+  @@map("coupons")
+}
+
 model Review {
   id        String   @id @default(uuid())
   userId    String
@@ -157,4 +200,16 @@ model Review {
   product   Product  @relation(fields: [productId], references: [id])
 
   @@map("reviews")
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  orderId     String   @unique
+  amount      Float
+  paymentDate DateTime @default(now())
+  status      String
+  method      String
+  order       Order    @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
 }

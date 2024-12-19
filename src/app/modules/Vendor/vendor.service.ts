@@ -20,7 +20,7 @@ const getAllVendorsFromDb = async () => {
 const getSingleVendorFromDb = async (id: string) => {
   const vendor = await prisma.vendor.findUniqueOrThrow({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -31,7 +31,7 @@ const getSingleVendorFromDb = async (id: string) => {
 const updateVendorIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IVendor>) => {
   const currentVendor = await prisma.vendor.findUniqueOrThrow({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -43,7 +43,7 @@ const updateVendorIntoDb = async (cloudinaryResult: any, id: string, updatedData
   }
   const result = await prisma.vendor.update({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     },
     data: updatedData
@@ -55,7 +55,7 @@ const updateVendorIntoDb = async (cloudinaryResult: any, id: string, updatedData
 const deleteVendorFromDb = async (id: string) => {
   const vendor = await prisma.vendor.findUnique({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -65,7 +65,7 @@ const deleteVendorFromDb = async (id: string) => {
   const result = await prisma.$transaction(async (tx) => {
     const deletedVendor = await tx.vendor.update({
       where: {
-        id,
+        userId: id,
         isDeleted: false
       },
       data: {
@@ -74,7 +74,7 @@ const deleteVendorFromDb = async (id: string) => {
     })
     const deletedUser = await tx.user.update({
       where: {
-        email: deletedVendor.email
+        id: deletedVendor.userId
       },
       data: {
         status: UserStatus.SUSPENDED

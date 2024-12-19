@@ -9,7 +9,7 @@ import config from '../../../config';
 const createNewAdminIntoDb = async (data: any) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
   const newAdmin = await prisma.$transaction(async (tx) => {
-    await tx.user.create({
+    const newUser = await tx.user.create({
       data: {
         email: data.email,
         password: hashedPassword,
@@ -20,6 +20,7 @@ const createNewAdminIntoDb = async (data: any) => {
       data: {
         name: data.name,
         email: data.email,
+        userId: newUser.id
       }
     })
     return admin;
@@ -27,7 +28,7 @@ const createNewAdminIntoDb = async (data: any) => {
 
   const accessToken = jwtHelpers.generateToken(
     {
-      id: newAdmin.id,
+      id: newAdmin.userId,
       email: newAdmin.email,
       role: UserRole.ADMIN,
     },
@@ -37,7 +38,7 @@ const createNewAdminIntoDb = async (data: any) => {
 
   const refreshToken = jwtHelpers.generateToken(
     {
-      id: newAdmin.id,
+      id: newAdmin.userId,
       email: newAdmin.email,
       role: UserRole.ADMIN,
     },
@@ -56,7 +57,7 @@ const createNewAdminIntoDb = async (data: any) => {
 const createNewCustomerIntoDb = async (data: any) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
   const newCustomer = await prisma.$transaction(async (tx) => {
-    await tx.user.create({
+    const newUser = await tx.user.create({
       data: {
         email: data.email,
         password: hashedPassword,
@@ -67,6 +68,7 @@ const createNewCustomerIntoDb = async (data: any) => {
       data: {
         name: data.name,
         email: data.email,
+        userId: newUser.id
       }
     })
     return customer;
@@ -74,7 +76,7 @@ const createNewCustomerIntoDb = async (data: any) => {
 
   const accessToken = jwtHelpers.generateToken(
     {
-      id: newCustomer.id,
+      id: newCustomer.userId,
       email: newCustomer.email,
       role: UserRole.CUSTOMER,
     },
@@ -84,7 +86,7 @@ const createNewCustomerIntoDb = async (data: any) => {
 
   const refreshToken = jwtHelpers.generateToken(
     {
-      id: newCustomer.id,
+      id: newCustomer.userId,
       email: newCustomer.email,
       role: UserRole.CUSTOMER,
     },
@@ -104,7 +106,7 @@ const createNewCustomerIntoDb = async (data: any) => {
 const createNewVendorIntoDb = async (data: any) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
   const newVendor = await prisma.$transaction(async (tx) => {
-    await tx.user.create({
+    const newUser = await tx.user.create({
       data: {
         email: data.email,
         password: hashedPassword,
@@ -115,6 +117,7 @@ const createNewVendorIntoDb = async (data: any) => {
       data: {
         shopName: data.shopName,
         email: data.email,
+        userId: newUser.id,
         logo: data.logo,
         description: data.description,
       }
@@ -124,7 +127,7 @@ const createNewVendorIntoDb = async (data: any) => {
 
   const accessToken = jwtHelpers.generateToken(
     {
-      id: newVendor.id,
+      id: newVendor.userId,
       email: newVendor.email,
       role: UserRole.VENDOR,
     },
@@ -134,7 +137,7 @@ const createNewVendorIntoDb = async (data: any) => {
 
   const refreshToken = jwtHelpers.generateToken(
     {
-      id: newVendor.id,
+      id: newVendor.userId,
       email: newVendor.email,
       role: UserRole.VENDOR,
     },

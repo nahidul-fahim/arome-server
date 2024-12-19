@@ -20,7 +20,7 @@ const getAllCustomersFromDb = async () => {
 const getSingleCustomerFromDb = async (id: string) => {
   const customer = await prisma.customer.findUniqueOrThrow({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -31,7 +31,7 @@ const getSingleCustomerFromDb = async (id: string) => {
 const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<ICustomer>) => {
   const currentCustomer = await prisma.customer.findUniqueOrThrow({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -43,7 +43,7 @@ const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedDa
   }
   const result = await prisma.customer.update({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     },
     data: updatedData
@@ -55,7 +55,7 @@ const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedDa
 const deleteCustomerFromDb = async (id: string) => {
   const customer = await prisma.customer.findUnique({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -65,7 +65,7 @@ const deleteCustomerFromDb = async (id: string) => {
   const result = await prisma.$transaction(async (tx) => {
     const deletedCustomer = await tx.customer.update({
       where: {
-        id,
+        userId: id,
         isDeleted: false
       },
       data: {
@@ -74,7 +74,7 @@ const deleteCustomerFromDb = async (id: string) => {
     })
     const deletedUser = await tx.user.update({
       where: {
-        email: deletedCustomer.email
+        id: deletedCustomer.userId
       },
       data: {
         status: UserStatus.SUSPENDED

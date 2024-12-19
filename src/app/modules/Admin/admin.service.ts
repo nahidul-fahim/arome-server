@@ -19,7 +19,7 @@ const getAllAdminsFromDb = async () => {
 const getSingleAdminFromDb = async (id: string) => {
   const admin = await prisma.admin.findUniqueOrThrow({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -30,7 +30,7 @@ const getSingleAdminFromDb = async (id: string) => {
 const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IAdmin>) => {
   const currentAdmin = await prisma.admin.findUniqueOrThrow({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -54,7 +54,7 @@ const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData:
 const deleteAdminFromDb = async (id: string) => {
   const admin = await prisma.admin.findUnique({
     where: {
-      id,
+      userId: id,
       isDeleted: false
     }
   });
@@ -64,7 +64,7 @@ const deleteAdminFromDb = async (id: string) => {
   const result = await prisma.$transaction(async (tx) => {
     const deletedAdmin = await tx.admin.update({
       where: {
-        id,
+        userId: id,
         isDeleted: false
       },
       data: {
@@ -73,7 +73,7 @@ const deleteAdminFromDb = async (id: string) => {
     })
     const deletedUser = await tx.user.update({
       where: {
-        email: deletedAdmin.email
+        id: deletedAdmin.userId
       },
       data: {
         status: UserStatus.SUSPENDED

@@ -102,7 +102,7 @@ model Product {
   vendorId    String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  vendor      Vendor      @relation(fields: [vendorId], references: [id])
+  vendor      Vendor      @relation(fields: [vendorId], references: [userId])
   category    Category    @relation(fields: [categoryId], references: [id])
   reviews     Review[]
   orderItems  OrderItem[]
@@ -131,8 +131,8 @@ model Order {
   totalAmount Float
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  vendor      Vendor      @relation(fields: [vendorId], references: [id])
-  customer    Customer    @relation(fields: [customerId], references: [id])
+  vendor      Vendor      @relation(fields: [vendorId], references: [userId])
+  customer    Customer    @relation(fields: [customerId], references: [userId])
   coupon      Coupon?     @relation(fields: [couponId], references: [id])
   orderItems  OrderItem[]
   Payment     Payment?
@@ -159,7 +159,7 @@ model Cart {
   customerId String
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
-  customer   Customer   @relation(fields: [customerId], references: [id])
+  customer   Customer   @relation(fields: [customerId], references: [userId])
   cartItems  CartItem[]
 
   @@map("carts")

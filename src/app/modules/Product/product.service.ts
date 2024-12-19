@@ -5,7 +5,7 @@ import { IProduct } from "./product.interface";
 const createProductIntoDb = async (vendorId: string, cloudinaryResult: any, data: IProduct) => {
   await prisma.vendor.findUniqueOrThrow({
     where: {
-      id: vendorId,
+      userId: vendorId,
       isDeleted: false
     }
   });
@@ -46,7 +46,7 @@ const getSingleProductFromDb = async (id: string) => {
 const getVendorAllProductsFromDb = async (vendorId: string) => {
   await prisma.vendor.findUniqueOrThrow({
     where: {
-      id: vendorId,
+      userId: vendorId,
       isDeleted: false
     }
   })
@@ -62,7 +62,7 @@ const getVendorAllProductsFromDb = async (vendorId: string) => {
 const updateProductIntoDb = async (vendorId: string, cloudinaryResult: any, id: string, data: Partial<IProduct>) => {
   await prisma.vendor.findUniqueOrThrow({
     where: {
-      id: vendorId,
+      userId: vendorId,
       isDeleted: false
     }
   });

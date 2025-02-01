@@ -41,7 +41,7 @@ const getSingleProduct = catchAsync(async (req, res) => {
 
 // Get all products of a vendor
 const getVendorAllProducts = catchAsync(async (req, res) => {
-  const { vendorId } = req.query; 
+  const { vendorId } = req.query;
   if (!vendorId || typeof vendorId !== 'string') {
     return sendResponse(res, {
       statusCode: StatusCodes.BAD_REQUEST,
@@ -76,8 +76,9 @@ const updateProduct = catchAsync(async (req, res) => {
 
 // Delete a product by id
 const deleteProduct = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  await ProductServices.deleteProductFromDb(id);
+  const { id: productId } = req.params;
+  const userId = req!.user!.id;
+  await ProductServices.deleteProductFromDb(productId, userId);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

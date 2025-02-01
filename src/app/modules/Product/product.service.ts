@@ -1,5 +1,8 @@
+import { StatusCodes } from "http-status-codes";
+import ApiError from "../../../errors/api-error";
 import prisma from "../../../shared/prisma"
 import { IProduct } from "./product.interface";
+import { UserRole } from "@prisma/client";
 
 // create new product
 const createProductIntoDb = async (vendorId: string, cloudinaryResult: any, data: IProduct) => {
@@ -59,18 +62,25 @@ const getVendorAllProductsFromDb = async (vendorId: string) => {
 }
 
 // update product
-const updateProductIntoDb = async (vendorId: string, cloudinaryResult: any, id: string, data: Partial<IProduct>) => {
-  await prisma.vendor.findUniqueOrThrow({
+const updateProductIntoDb = async (vendorId: string, cloudinaryResult: any, productId: string, data: Partial<IProduct>) => {
+  const currentVendor = await prisma.vendor.findUniqueOrThrow({
     where: {
       userId: vendorId,
       isDeleted: false
+    },
+    select: {
+      userId: true
     }
   });
-  await prisma.product.findUniqueOrThrow({
+  const currentProduct = await prisma.product.findUniqueOrThrow({
     where: {
-      id
+      id: productId
+    },
+    select: {
+      vendorId: true
     }
   })
+  if (currentProduct?.vendorId !== currentVendor?.userId) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized to update this product!");
   if (data.categoryId) {
     await prisma.category.findUniqueOrThrow({
       where: {
@@ -86,7 +96,7 @@ const updateProductIntoDb = async (vendorId: string, cloudinaryResult: any, id: 
   }
   const result = await prisma.product.update({
     where: {
-      id
+      id: productId
     },
     data
   });
@@ -94,10 +104,26 @@ const updateProductIntoDb = async (vendorId: string, cloudinaryResult: any, id: 
 }
 
 // delete product
-const deleteProductFromDb = async (id: string) => {
+const deleteProductFromDb = async (productId: string, userId: string) => {
+  const currentUser = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: userId
+    }
+  })
+  const currentProduct = await prisma.product.findUniqueOrThrow({
+    where: {
+      id: productId
+    },
+    select: {
+      vendorId: true
+    }
+  })
+  const isAdmin = currentUser.role === (UserRole.ADMIN || UserRole.SUPER_ADMIN);
+  const isAuthorized = currentProduct?.vendorId === userId || isAdmin
+  if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
   const result = await prisma.product.delete({
     where: {
-      id
+      id: productId
     }
   });
   return result;

@@ -9,7 +9,7 @@ import validateRequest from "../../../middlewares/validate-request";
 import { ProductValidation } from "./product.validation";
 
 const router = express.Router();
- 
+
 router.post(
   "/",
   auth(UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
@@ -46,7 +46,7 @@ router.get(
 
 router.patch(
   "/:id",
-  auth(UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.VENDOR),
   upload.single("file"),
   sendImageToCloudinary,
   (req: Request, res: Response, next: NextFunction) => {
@@ -60,7 +60,7 @@ router.patch(
     }
   },
   validateRequest(ProductValidation.updateProductValidation),
-  ProductController.createNewProduct
+  ProductController.updateProduct
 )
 
 

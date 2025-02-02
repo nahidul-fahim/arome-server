@@ -26,7 +26,7 @@ const getAllOrders = catchAsync(async (req, res) => {
   })
 })
 
-// get all vendor orders
+// get vendor all orders
 const getVendorAllOrders = catchAsync(async (req, res) => {
   const { vendorId } = req.params;
   const userId = req!.user!.id;
@@ -34,7 +34,20 @@ const getVendorAllOrders = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Orders fetched successfully!",
+    message: "Vendor orders fetched successfully!",
+    data: result
+  })
+})
+
+// get customer all orders
+const getCustomerAllPurchases = catchAsync(async (req, res) => {
+  const { customerId } = req.params;
+  const userId = req!.user!.id;
+  const result = await OrderServices.getCustomerAllPurchasesFromDb(customerId, userId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Customer purchases fetched successfully!",
     data: result
   })
 })
@@ -42,5 +55,6 @@ const getVendorAllOrders = catchAsync(async (req, res) => {
 export const OrderController = {
   createNewOrder,
   getAllOrders,
-  getVendorAllOrders
+  getVendorAllOrders,
+  getCustomerAllPurchases
 }

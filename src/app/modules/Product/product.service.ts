@@ -118,7 +118,7 @@ const deleteProductFromDb = async (productId: string, userId: string) => {
       vendorId: true
     }
   })
-  const isAdmin = currentUser.role === (UserRole.ADMIN || UserRole.SUPER_ADMIN);
+  const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   const isAuthorized = currentProduct?.vendorId === userId || isAdmin
   if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
   const result = await prisma.product.delete({

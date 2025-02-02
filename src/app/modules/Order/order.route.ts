@@ -13,16 +13,23 @@ router.post(
   validateRequest(OrderValidation.createOrderValidation),
   OrderController.createNewOrder
 )
+
 router.get(
-  "/",
+  "/all-orders",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   OrderController.getAllOrders
 )
 
 router.get(
-  "/:vendorId",
+  "/vendor-orders/:vendorId",
   auth(UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   OrderController.getVendorAllOrders
+)
+
+router.get(
+  "/customer-purchases/:customerId",
+  auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  OrderController.getCustomerAllPurchases
 )
 
 export const orderRoutes = router;

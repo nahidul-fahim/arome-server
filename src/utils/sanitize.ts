@@ -4,6 +4,5 @@ export const excludeSensitiveFields = <T extends object>(data: T, fieldsToExclud
     delete sanitizedData[field];
   });
   const finalData = Object.keys(sanitizedData);
-  console.log(finalData);
   return sanitizedData;
 };

@@ -66,12 +66,30 @@ const getAllOrdersFromDb = async (adminId: string) => {
 const getVendorAllOrdersFromDb = async (vendorId: string, userId: string) => {
   const vendor = await validateUser(vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
   const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-  const isAdmin = currentUser.role === (UserRole.ADMIN || UserRole.SUPER_ADMIN);
+  const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   const isAuthorized = vendor?.id === userId || isAdmin;
   if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
   const result = await prisma.order.findMany({
     where: {
       vendorId
+    },
+    include: {
+      orderItems: true,
+    }
+  });
+  return result;
+}
+
+// get customer all orders (customer purchase history)
+const getCustomerAllPurchasesFromDb = async (customerId: string, userId: string) => {
+  const customer = await validateUser(customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+  const isAuthorized = customer?.id === userId || isAdmin;
+  if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+  const result = await prisma.order.findMany({
+    where: {
+      customerId
     },
     include: {
       orderItems: true,
@@ -90,4 +108,5 @@ export const OrderServices = {
   createOrderIntoDb,
   getAllOrdersFromDb,
   getVendorAllOrdersFromDb,
+  getCustomerAllPurchasesFromDb
 }

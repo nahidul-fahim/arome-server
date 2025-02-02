@@ -98,12 +98,6 @@ const getCustomerAllPurchasesFromDb = async (customerId: string, userId: string)
   return result;
 }
 
-/*
-TODO NOTE: 
-    GET ALL CUSTOMER ORDERS
-*/
-
-
 export const OrderServices = {
   createOrderIntoDb,
   getAllOrdersFromDb,

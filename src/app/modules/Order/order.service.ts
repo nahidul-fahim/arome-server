@@ -3,11 +3,13 @@ import prisma from "../../../shared/prisma";
 import { IOrder } from "./order.interface";
 import { validateUser } from "../../../utils/validate-user";
 import { validateProductInventory } from "../../../utils/validate-product-inventory";
+import ApiError from "../../../errors/api-error";
+import { StatusCodes } from "http-status-codes";
 
 // create new order
 const createOrderIntoDb = async (data: IOrder) => {
-  await validateUser(data.customerId, UserStatus.ACTIVE, UserRole.CUSTOMER);
-  await validateUser(data.vendorId, UserStatus.ACTIVE, UserRole.VENDOR);
+  await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+  await validateUser(data.vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
   let totalAmount = 0;
   const itemsWithPrice = await Promise.all(
     data.orderItems.map(async (item) => {
@@ -49,22 +51,10 @@ const createOrderIntoDb = async (data: IOrder) => {
   return result;
 };
 
-
-// get all orders
-const getAllOrdersFromDb = async () => {
+// get all orders for admin only
+const getAllOrdersFromDb = async (adminId: string) => {
+  await validateUser(adminId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   const result = await prisma.order.findMany({
-    include: {
-      orderItems: true,
-    }
-  });
-  return result;
-}
-// get single order
-const getSingleOrderFromDb = async (id: string) => {
-  const result = await prisma.order.findUniqueOrThrow({
-    where: {
-      id
-    },
     include: {
       orderItems: true,
     }
@@ -72,17 +62,16 @@ const getSingleOrderFromDb = async (id: string) => {
   return result;
 };
 
-// get customer all orders
-const getCustomerAllOrdersFromDb = async (customerId: string) => {
-  await prisma.customer.findUniqueOrThrow({
-    where: {
-      id: customerId,
-      isDeleted: false
-    }
-  });
+// get vendor all orders
+const getVendorAllOrdersFromDb = async (vendorId: string, userId: string) => {
+  const vendor = await validateUser(vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  const isAdmin = currentUser.role === (UserRole.ADMIN || UserRole.SUPER_ADMIN);
+  const isAuthorized = vendor?.id === userId || isAdmin;
+  if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
   const result = await prisma.order.findMany({
     where: {
-      customerId
+      vendorId
     },
     include: {
       orderItems: true,
@@ -91,40 +80,14 @@ const getCustomerAllOrdersFromDb = async (customerId: string) => {
   return result;
 }
 
-// update order
-const updateOrderIntoDb = async (id: string, data: Partial<IOrder>) => {
-  await prisma.order.findUniqueOrThrow({
-    where: {
-      id
-    }
-  });
-  const result = await prisma.order.update({
-    where: {
-      id
-    },
-    data,
-    include: {
-      orderItems: true,
-    }
-  });
-  return result;
-}
+/*
+TODO NOTE: 
+    GET ALL CUSTOMER ORDERS
+*/
 
-// delete order
-const deleteOrderFromDb = async (id: string) => {
-  const result = await prisma.order.delete({
-    where: {
-      id
-    }
-  });
-  return result;
-}
 
 export const OrderServices = {
   createOrderIntoDb,
   getAllOrdersFromDb,
-  getSingleOrderFromDb,
-  getCustomerAllOrdersFromDb,
-  updateOrderIntoDb,
-  deleteOrderFromDb
+  getVendorAllOrdersFromDb,
 }

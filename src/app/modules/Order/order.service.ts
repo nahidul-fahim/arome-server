@@ -20,13 +20,13 @@ const createOrderIntoDb = async (data: IOrder) => {
     },
   });
   let totalAmount = 0;
-  for (const item of data.orderItems) {
+  for (const item of data?.orderItems) {
     const product = await prisma.product.findUniqueOrThrow({
       where: {
         id: item.productId,
       }
     });
-    if (product.inventory < item.quantity) {
+    if (product?.inventory < item?.quantity) {
       throw new ApiError(400, `Insufficient inventory for product ${product.name}`);
     }
     Number(totalAmount += item.price * item.quantity).toFixed(2);

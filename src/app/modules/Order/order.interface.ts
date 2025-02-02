@@ -1,7 +1,6 @@
 export interface IOrderItem {
   productId: string;
   quantity: number;
-  price: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

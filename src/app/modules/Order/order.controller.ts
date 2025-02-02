@@ -5,7 +5,7 @@ import { OrderServices } from "./order.service";
 
 // get all customers
 const createNewOrder = catchAsync(async (req, res) => {
-  const result = await OrderServices.createOrderIntoDb(req.body);
+  const result = await OrderServices.createOrderIntoDb(req?.body);
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     success: true,

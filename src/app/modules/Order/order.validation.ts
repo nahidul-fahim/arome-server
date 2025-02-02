@@ -13,13 +13,6 @@ const createOrderValidation = z.object({
       invalid_type_error: "Vendor ID must be a string",
     }),
 
-    totalAmount: z
-      .number({
-        required_error: "Total amount is required",
-        invalid_type_error: "Total amount must be a number",
-      })
-      .positive({ message: "Total amount must be greater than 0" }),
-
     orderItems: z
       .array(
         z.object({
@@ -33,12 +26,6 @@ const createOrderValidation = z.object({
               invalid_type_error: "Quantity must be a number",
             })
             .positive({ message: "Quantity must be greater than 0" }),
-          price: z
-            .number({
-              required_error: "Price is required",
-              invalid_type_error: "Price must be a number",
-            })
-            .positive({ message: "Price must be greater than 0" }),
         })
       )
       .min(1, { message: "At least one order item is required" }),
@@ -62,13 +49,6 @@ const updateOrderValidation = z.object({
       })
       .optional(),
 
-    totalAmount: z
-      .number({
-        invalid_type_error: "Total amount must be a number",
-      })
-      .positive({ message: "Total amount must be greater than 0" })
-      .optional(),
-
     orderItems: z
       .array(
         z.object({
@@ -79,12 +59,7 @@ const updateOrderValidation = z.object({
             .number({
               invalid_type_error: "Quantity must be a number",
             })
-            .positive({ message: "Quantity must be greater than 0" }),
-          price: z
-            .number({
-              invalid_type_error: "Price must be a number",
-            })
-            .positive({ message: "Price must be greater than 0" }),
+            .positive({ message: "Quantity must be greater than 0" })
         })
       )
       .optional(),

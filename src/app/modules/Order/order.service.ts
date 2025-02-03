@@ -5,6 +5,7 @@ import { validateUser } from "../../../utils/validate-user";
 import { validateProductInventory } from "../../../utils/validate-product-inventory";
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
+import { validateOrder } from "../../../utils/validate-order";
 
 // create new order
 const createOrderIntoDb = async (data: IOrder) => {
@@ -98,9 +99,28 @@ const getCustomerAllPurchasesFromDb = async (customerId: string, userId: string)
   return result;
 }
 
+// get a single order
+const getSingleOrderFromDb = async (orderId: string, userId: string) => {
+  const user = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  const order = await validateOrder(orderId);
+  const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+  const isAuthorized = order.customerId === userId || isAdmin;
+  if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+  const result = await prisma.order.findUniqueOrThrow({
+    where: {
+      id: orderId
+    },
+    include: {
+      orderItems: true,
+    }
+  });
+  return result;
+}
+
 export const OrderServices = {
   createOrderIntoDb,
   getAllOrdersFromDb,
   getVendorAllOrdersFromDb,
-  getCustomerAllPurchasesFromDb
+  getCustomerAllPurchasesFromDb,
+  getSingleOrderFromDb
 }

@@ -32,4 +32,10 @@ router.get(
   OrderController.getCustomerAllPurchases
 )
 
+router.get(
+  "/order-details/:orderId",
+  auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  OrderController.getSingleOrder
+)
+
 export const orderRoutes = router;

@@ -11,6 +11,7 @@ export interface ICartITem {
     cartId?: string;
     productId: string;
     quantity: number;
+    price: number;
     createdAt?: Date;
     updatedAt?: Date;
 }

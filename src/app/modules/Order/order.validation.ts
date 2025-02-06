@@ -7,12 +7,6 @@ const createOrderValidation = z.object({
       required_error: "Customer ID is required",
       invalid_type_error: "Customer ID must be a string",
     }),
-
-    vendorId: z.string({
-      required_error: "Vendor ID is required",
-      invalid_type_error: "Vendor ID must be a string",
-    }),
-
     orderItems: z
       .array(
         z.object({
@@ -38,16 +32,6 @@ const updateOrderValidation = z.object({
     customerId: z.string({
       invalid_type_error: "Customer ID must be a string",
     }).optional(),
-
-    vendorId: z.string({
-      invalid_type_error: "Vendor ID must be a string",
-    }).optional(),
-
-    status: z
-      .enum(["PENDING", "COMPLETED", "CANCELLED"], {
-        invalid_type_error: "Invalid status value",
-      })
-      .optional(),
 
     orderItems: z
       .array(

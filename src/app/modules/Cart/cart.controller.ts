@@ -13,7 +13,20 @@ const createCart = catchAsync(async (req, res) => {
     })
 });
 
+const getSingleCart = catchAsync(async (req, res) => {
+    const userId = req!.user!.id;
+    const { cartId } = req.params;
+    const result = await CartServices.getSingleCartFromDB(cartId, userId);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Cart fetched successfully!",
+        data: result
+    })
+});
+
 
 export const CartController = {
     createCart,
+    getSingleCart
 }

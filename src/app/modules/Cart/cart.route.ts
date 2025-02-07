@@ -14,11 +14,11 @@ router.post(
     CartController.createCart
 )
 
-// router.get(
-//   "/all-orders",
-//   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-//   OrderController.getAllOrders
-// )
+router.get(
+    "/:cartId",
+    auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    CartController.getSingleCart
+)
 
 // router.get(
 //   "/vendor-orders/:vendorId",

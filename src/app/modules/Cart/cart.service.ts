@@ -49,22 +49,22 @@ const createCartIntoDb = async (data: ICart) => {
     return result;
 };
 
-// get customer cart
-const getCustomerCartFromDb = async (customerId: string, userId: string) => {
+// get single cart
+const getSingleCartFromDB = async (cartId: string, userId: string) => {
     const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
     const currentCart = await prisma.cart.findUniqueOrThrow({
         where: {
-            customerId
+            id: cartId
         },
         include: {
             cartItems: true
         }
     });
-    await validateAuthorized(currentCart.customerId, currentUser?.role, userId);
+    await validateAuthorized(currentCart?.customerId, currentUser?.role, userId);
     return currentCart;
 }
 
 export const CartServices = {
     createCartIntoDb,
-    getCustomerCartFromDb
+    getSingleCartFromDB
 }

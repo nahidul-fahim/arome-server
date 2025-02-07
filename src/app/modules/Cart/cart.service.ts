@@ -5,7 +5,9 @@ import { ICart } from "./cart.interface";
 import { validateProductInventory } from "../../../utils/validate-product-inventory";
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
+import { validateAuthorized } from "../../../utils/validate-authorized";
 
+// create new cart
 const createCartIntoDb = async (data: ICart) => {
     await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
 
@@ -47,6 +49,22 @@ const createCartIntoDb = async (data: ICart) => {
     return result;
 };
 
+// get customer cart
+const getCustomerCartFromDb = async (customerId: string, userId: string) => {
+    const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    const currentCart = await prisma.cart.findUniqueOrThrow({
+        where: {
+            customerId
+        },
+        include: {
+            cartItems: true
+        }
+    });
+    await validateAuthorized(currentCart.customerId, currentUser?.role, userId);
+    return currentCart;
+}
+
 export const CartServices = {
     createCartIntoDb,
+    getCustomerCartFromDb
 }

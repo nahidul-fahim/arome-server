@@ -9,7 +9,10 @@ export interface ICart {
 export interface ICartITem {
     id?: string;
     cartId?: string;
+    cartItemId ?: string;
     productId: string;
+    productName: string;
+    productImage: string;
     quantity: number;
     price: number;
     createdAt?: Date;

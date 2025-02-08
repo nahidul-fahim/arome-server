@@ -20,22 +20,17 @@ router.get(
     CartController.getSingleCart
 )
 
-// router.get(
-//   "/vendor-orders/:vendorId",
-//   auth(UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
-//   OrderController.getVendorAllOrders
-// )
+router.patch(
+    "/:cartId",
+    auth(UserRole.CUSTOMER),
+    validateRequest(CartValidation.updateCartValidation),
+    CartController.updateCart
+)
 
-// router.get(
-//   "/customer-purchases/:customerId",
-//   auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
-//   OrderController.getCustomerAllPurchases
-// )
-
-// router.get(
-//   "/order-details/:orderId",
-//   auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
-//   OrderController.getSingleOrder
-// )
+router.delete(
+    "/:cartId",
+    auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    CartController.deleteCart
+)
 
 export const cartRoutes = router;

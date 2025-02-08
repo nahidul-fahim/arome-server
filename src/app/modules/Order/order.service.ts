@@ -7,7 +7,10 @@ import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { validateOrder } from "../../../utils/validate-order";
 
-// create new order
+/*
+TODO: Add productName & productImage in OrderItem in PRisma Schema
+*/
+
 const createOrderIntoDb = async (data: IOrder) => {
   await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
   await validateUser(data.vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
@@ -52,7 +55,6 @@ const createOrderIntoDb = async (data: IOrder) => {
   return result;
 };
 
-// get all orders for admin only
 const getAllOrdersFromDb = async (adminId: string) => {
   await validateUser(adminId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   const result = await prisma.order.findMany({
@@ -63,7 +65,6 @@ const getAllOrdersFromDb = async (adminId: string) => {
   return result;
 };
 
-// get vendor all orders
 const getVendorAllOrdersFromDb = async (vendorId: string, userId: string) => {
   const vendor = await validateUser(vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
   const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
@@ -81,7 +82,6 @@ const getVendorAllOrdersFromDb = async (vendorId: string, userId: string) => {
   return result;
 }
 
-// get customer all orders (customer purchase history)
 const getCustomerAllPurchasesFromDb = async (customerId: string, userId: string) => {
   const customer = await validateUser(customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
   const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
@@ -99,7 +99,6 @@ const getCustomerAllPurchasesFromDb = async (customerId: string, userId: string)
   return result;
 }
 
-// get a single order
 const getSingleOrderFromDb = async (orderId: string, userId: string) => {
   const user = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   const order = await validateOrder(orderId);

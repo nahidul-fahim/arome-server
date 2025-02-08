@@ -166,15 +166,17 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(uuid())
-  cartId    String
-  productId String
-  quantity  Int      @default(1)
-  price     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  cart      Cart     @relation(fields: [cartId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  id          String   @id @default(uuid())
+  cartId      String
+  productId   String
+  productName String
+  productImage String
+  quantity    Int      @default(1)
+  price       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cart        Cart     @relation(fields: [cartId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
 
   @@map("cart_items")
 }

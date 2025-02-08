@@ -8,22 +8,23 @@ import { StatusCodes } from "http-status-codes";
 import { validateAuthorized } from "../../../utils/validate-authorized";
 
 // create new cart
-const createCartIntoDb = async (data: ICart) => {
+const createCartIntoDB = async (data: ICart) => {
     await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
 
     const vendorIds = new Set<string>();
     const cartItemsWithDetails = await Promise.all(data.cartItem.map(async (item) => {
         const product = await validateProductInventory(item.productId, item.quantity);
-        if (!product) throw new ApiError(StatusCodes.NOT_FOUND, "Product not found!");
         vendorIds.add(product.vendorId);
         return {
             productId: item.productId,
+            productName: product.name,
+            productImage: product.image,
             quantity: item.quantity,
             price: product.price
         };
     }));
 
-    if (vendorIds.size > 1) throw new ApiError(400, "All products in the cart must be from the same vendor.");
+    if (vendorIds.size > 1) throw new ApiError(StatusCodes.BAD_REQUEST, "All products in the cart must be from the same vendor.");
 
     const result = await prisma.$transaction(async (tx) => {
         const cart = await tx.cart.create({
@@ -64,7 +65,81 @@ const getSingleCartFromDB = async (cartId: string, userId: string) => {
     return currentCart;
 }
 
+const updateCartIntoDB = async (cartId: string, userId: string, data: Partial<ICart>) => {
+    const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+    const currentCart = await prisma.cart.findUniqueOrThrow({
+        where: {
+            id: cartId
+        }
+    });
+    await validateAuthorized(currentCart.customerId, currentUser.role, userId);
+    if (!data.cartItem || data.cartItem.length === 0) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "No cart items provided!");
+    }
+    const vendorIds = new Set<string>();
+    const cartItemsWithDetails = await Promise.all(data.cartItem.map(async (item) => {
+        const product = await validateProductInventory(item.productId, item.quantity);
+        vendorIds.add(product.vendorId);
+        return {
+            cartItemId: item.cartItemId,
+            quantity: item.quantity,
+            price: product.price
+        };
+    }));
+    if (vendorIds.size > 1) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "All products in the cart must be from the same vendor.");
+    }
+    await Promise.all(cartItemsWithDetails.map(async (item) => {
+        await prisma.cartItem.update({
+            where: {
+                id: item.cartItemId
+            },
+            data: {
+                quantity: item.quantity,
+            }
+        });
+    }));
+    const updatedCart = await prisma.cart.findUnique({
+        where: {
+            id: cartId
+        },
+        include: {
+            cartItems: true
+        }
+    });
+
+    return updatedCart;
+};
+
+const deleteCartFromDB = async (cartId: string, userId: string) => {
+    const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+    const currentCart = await prisma.cart.findUniqueOrThrow({
+        where: {
+            id: cartId
+        }
+    })
+    await validateAuthorized(currentCart?.customerId, currentUser?.role, userId);
+    const result = await prisma.$transaction(async (tx) => {
+        await tx.cartItem.deleteMany({
+            where: {
+                cartId
+            }
+        })
+        await tx.cart.delete({
+            where: {
+                id: cartId
+            }
+        })
+        return {
+            message: "Cart deleted successfully!"
+        }
+    })
+    return result;
+}
+
 export const CartServices = {
-    createCartIntoDb,
-    getSingleCartFromDB
+    createCartIntoDB,
+    getSingleCartFromDB,
+    updateCartIntoDB,
+    deleteCartFromDB
 }

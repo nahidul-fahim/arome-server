@@ -30,27 +30,23 @@ const createCartValidation = z.object({
 // Update Cart Validation
 const updateCartValidation = z.object({
     body: z.object({
-        customerId: z.string({
-            required_error: "Customer ID is required",
-            invalid_type_error: "Customer ID must be a string",
-        }),
-
         cartItem: z
             .array(
                 z.object({
                     productId: z.string({
                         invalid_type_error: "Product ID must be a string",
-                    })
-                        .optional(),
+                    }),
+                    cartItemId: z.string({
+                        required_error: "Cart item ID is required",
+                        invalid_type_error: "Cart item ID must be a string",
+                    }),
                     quantity: z
                         .number({
                             invalid_type_error: "Quantity must be a number",
                         })
-                        .positive({ message: "Quantity must be greater than 0" })
-                        .optional(),
+                        .positive({ message: "Quantity must be greater than 0" }),
                 })
-            )
-            .optional(),
+            ),
     }),
 });
 

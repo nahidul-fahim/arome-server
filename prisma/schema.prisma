@@ -122,6 +122,33 @@ model Category {
   @@map("categories")
 }
 
+model Cart {
+  id         String     @id @default(uuid())
+  customerId String     @unique
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  customer   Customer   @relation(fields: [customerId], references: [userId])
+  cartItems  CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id           String   @id @default(uuid())
+  cartId       String
+  productId    String
+  productName  String
+  productImage String
+  quantity     Int      @default(1)
+  price        Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  cart         Cart     @relation(fields: [cartId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id])
+
+  @@map("cart_items")
+}
+
 model Order {
   id          String      @id @default(uuid())
   customerId  String
@@ -154,33 +181,6 @@ model OrderItem {
   product      Product  @relation(fields: [productId], references: [id])
 
   @@map("order_items")
-}
-
-model Cart {
-  id         String     @id @default(uuid())
-  customerId String     @unique
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  customer   Customer   @relation(fields: [customerId], references: [userId])
-  cartItems  CartItem[]
-
-  @@map("carts")
-}
-
-model CartItem {
-  id           String   @id @default(uuid())
-  cartId       String
-  productId    String
-  productName  String
-  productImage String
-  quantity     Int      @default(1)
-  price        Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  cart         Cart     @relation(fields: [cartId], references: [id])
-  product      Product  @relation(fields: [productId], references: [id])
-
-  @@map("cart_items")
 }
 
 model Coupon {

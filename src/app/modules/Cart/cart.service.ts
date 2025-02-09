@@ -10,7 +10,6 @@ import { validateAuthorized } from "../../../utils/validate-authorized";
 // create new cart
 const createCartIntoDB = async (data: ICart) => {
     await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
-
     const vendorIds = new Set<string>();
     const cartItemsWithDetails = await Promise.all(data.cartItem.map(async (item) => {
         const product = await validateProductInventory(item.productId, item.quantity);

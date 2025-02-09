@@ -2,10 +2,13 @@ import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../../shared/catch-async";
 import sendResponse from "../../../shared/send-response";
 import { OrderServices } from "./order.service";
+import { dummyPaymentData } from "../../../dummy-data/dummy-payment-data";
 
 // get all customers
 const createNewOrder = catchAsync(async (req, res) => {
-  const result = await OrderServices.createOrderIntoDb(req?.body);
+  const { customerId } = req.body;
+  const paymentDetails = dummyPaymentData;
+  const result = await OrderServices.createOrderIntoDB(customerId, paymentDetails);
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     success: true,

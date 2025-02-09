@@ -1,81 +1,84 @@
-import { UserRole, UserStatus } from "@prisma/client";
+import { OrderStatus, UserRole, UserStatus } from "@prisma/client";
 import prisma from "../../../shared/prisma";
-import { IOrder } from "./order.interface";
 import { validateUser } from "../../../utils/validate-user";
-import { validateProductInventory } from "../../../utils/validate-product-inventory";
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { validateOrder } from "../../../utils/validate-order";
 
-const createOrderIntoDb = async (data: IOrder) => {
-  await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
-  await validateUser(data.vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
-  let totalAmount = 0;
-  const itemsWithPrice = await Promise.all(
-    data.orderItems.map(async (item) => {
-      const product = await validateProductInventory(item.productId, item.quantity);
-      totalAmount += product?.price * item?.quantity;
-      return {
-        productId: item.productId,
-        productName: product.name,
-        productImage: product.image,
-        quantity: item.quantity,
-        price: product?.price
-      }
-    })
-  );
-  const result = await prisma.$transaction(async (tx) => {
-    const order = await tx.order.create({
-      data: {
-        customerId: data.customerId,
-        vendorId: data.vendorId,
-        totalAmount: Number(totalAmount.toFixed(2)),
-      }
-    });
-
-    await tx.orderItem.createMany({
-      data: itemsWithPrice.map((item) => ({
-        ...item,
-        orderId: order.id
-      }))
-    });
-
-    await tx.product.updateMany({
-      where: {
-        id: {
-          in: itemsWithPrice.map((item) => item.productId)
+const createOrderIntoDB = async (customerId: string, paymentDetails: any) => {
+  await validateUser(customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+  const cart = await prisma.cart.findUniqueOrThrow({
+    where: {
+      customerId
+    },
+    include: {
+      cartItems: {
+        include: {
+          product: true
         }
-      },
+      }
+    }
+  })
+
+  console.dir({ cart }, { depth: Infinity });
+
+  if (!cart || cart.cartItems.length === 0) throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
+  const totalAmount = cart.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const order = await prisma.$transaction(async (tx) => {
+    const order = tx.order.create({
       data: {
-        quantity: {
-          decrement: itemsWithPrice.map((item) => item.quantity)
+        customerId,
+        vendorId: cart.cartItems[0].product.vendorId,
+        totalAmount,
+        status: OrderStatus.PENDING,
+        orderItems: {
+          create: cart.cartItems.map((item) => ({
+            productId: item.productId,
+            productName: item.product.name,
+            productImage: item.product.image,
+            quantity: item.quantity,
+            price: item.price
+          }))
         }
       }
     });
-
     await tx.cartItem.deleteMany({
-      // TODO: delete cart items
+      where: {
+        cartId: cart.id
+      }
     });
-
     await tx.cart.delete({
       where: {
-        id: data.cartId 
-        // TODO: delete cart
+        id: cart.id
       }
     });
-
-    const completedOrder = await tx.order.findUnique({
-      where: {
-        id: order.id,
-      },
-      include: {
-        orderItems: true
-      }
-    });
-    return completedOrder;
+    await Promise.all(
+      cart.cartItems.map(async (item) => {
+        await tx.product.update({
+          where: {
+            id: item.productId
+          },
+          data: {
+            inventory: {
+              decrement: item.quantity
+            }
+          }
+        })
+      })
+    )
+    return order;
   })
-  return result;
-};
+  const payment = await prisma.payment.create({
+    data: {
+      orderId: order.id,
+      amount: totalAmount,
+      status: "PENDING",
+      method: "stripe",
+    },
+  });
+
+  return { order, payment }
+}
 
 const getAllOrdersFromDb = async (adminId: string) => {
   await validateUser(adminId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
@@ -139,7 +142,7 @@ const getSingleOrderFromDb = async (orderId: string, userId: string) => {
 }
 
 export const OrderServices = {
-  createOrderIntoDb,
+  createOrderIntoDB,
   getAllOrdersFromDb,
   getVendorAllOrdersFromDb,
   getCustomerAllPurchasesFromDb,

@@ -7,10 +7,6 @@ import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { validateOrder } from "../../../utils/validate-order";
 
-/*
-TODO: Add productName & productImage in OrderItem in PRisma Schema
-*/
-
 const createOrderIntoDb = async (data: IOrder) => {
   await validateUser(data.customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
   await validateUser(data.vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
@@ -21,6 +17,8 @@ const createOrderIntoDb = async (data: IOrder) => {
       totalAmount += product?.price * item?.quantity;
       return {
         productId: item.productId,
+        productName: product.name,
+        productImage: product.image,
         quantity: item.quantity,
         price: product?.price
       }
@@ -40,6 +38,30 @@ const createOrderIntoDb = async (data: IOrder) => {
         ...item,
         orderId: order.id
       }))
+    });
+
+    await tx.product.updateMany({
+      where: {
+        id: {
+          in: itemsWithPrice.map((item) => item.productId)
+        }
+      },
+      data: {
+        quantity: {
+          decrement: itemsWithPrice.map((item) => item.quantity)
+        }
+      }
+    });
+
+    await tx.cartItem.deleteMany({
+      // TODO: delete cart items
+    });
+
+    await tx.cart.delete({
+      where: {
+        id: data.cartId 
+        // TODO: delete cart
+      }
     });
 
     const completedOrder = await tx.order.findUnique({

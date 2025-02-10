@@ -20,8 +20,6 @@ const createOrderIntoDB = async (customerId: string, paymentDetails: any) => {
     }
   })
 
-  console.dir({ cart }, { depth: Infinity });
-
   if (!cart || cart.cartItems.length === 0) throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
   const totalAmount = cart.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   const order = await prisma.$transaction(async (tx) => {
@@ -141,10 +139,39 @@ const getSingleOrderFromDb = async (orderId: string, userId: string) => {
   return result;
 }
 
+const deleteOrderFromDb = async (orderId: string, userId: string) => {
+  const user = await validateUser(userId, UserStatus.ACTIVE, [UserRole.SUPER_ADMIN]);
+  await validateOrder(orderId);
+  const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
+  if (!isSuperAdmin) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.payment.deleteMany({
+      where: {
+        orderId
+      }
+    });
+    await tx.orderItem.deleteMany({
+      where: {
+        orderId
+      }
+    });
+    const deletedOrder = await tx.order.delete({
+      where: {
+        id: orderId
+      }
+    });
+    return deletedOrder;
+  })
+  return result;
+}
+
+// todo: update order + adding shipping address to order in prisma schema
+
 export const OrderServices = {
   createOrderIntoDB,
   getAllOrdersFromDb,
   getVendorAllOrdersFromDb,
   getCustomerAllPurchasesFromDb,
-  getSingleOrderFromDb
+  getSingleOrderFromDb,
+  deleteOrderFromDb
 }

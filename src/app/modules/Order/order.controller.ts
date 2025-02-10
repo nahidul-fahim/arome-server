@@ -68,10 +68,23 @@ const getSingleOrder = catchAsync(async (req, res) => {
   })
 })
 
+const deleteOrder = catchAsync(async (req, res) => {
+  const { orderId } = req.params;
+  const userId = req!.user!.id;
+  const result = await OrderServices.deleteOrderFromDb(orderId, userId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Order deleted successfully!",
+    data: result
+  })
+})
+
 export const OrderController = {
   createNewOrder,
   getAllOrders,
   getVendorAllOrders,
   getCustomerAllPurchases,
-  getSingleOrder
+  getSingleOrder,
+  deleteOrder
 }

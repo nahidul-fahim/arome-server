@@ -38,4 +38,10 @@ router.get(
   OrderController.getSingleOrder
 )
 
+router.delete(
+  "/delete-order/:orderId",
+  auth(UserRole.SUPER_ADMIN),
+  OrderController.deleteOrder
+)
+
 export const orderRoutes = router;

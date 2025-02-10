@@ -167,6 +167,12 @@ model Order {
   @@map("orders")
 }
 
+model ShippingDetails {
+  id String @id @default(uuid())
+  address String
+  phone String
+}
+
 model OrderItem {
   id           String   @id @default(uuid())
   orderId      String

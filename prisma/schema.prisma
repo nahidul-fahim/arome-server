@@ -149,28 +149,70 @@ model CartItem {
   @@map("cart_items")
 }
 
-model Order {
-  id          String      @id @default(uuid())
-  customerId  String
-  vendorId    String
-  couponId    String?
-  status      OrderStatus @default(PENDING)
-  totalAmount Float
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  vendor      Vendor      @relation(fields: [vendorId], references: [userId])
-  customer    Customer    @relation(fields: [customerId], references: [userId])
-  coupon      Coupon?     @relation(fields: [couponId], references: [id])
-  orderItems  OrderItem[]
-  Payment     Payment?
+model Region {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  districts       District[]
+  ShippingDetails ShippingDetails[]
 
-  @@map("orders")
+  @@map("regions")
+}
+
+model District {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  regionId        String
+  region          Region            @relation(fields: [regionId], references: [id])
+  cities          City[]
+  ShippingDetails ShippingDetails[]
+
+  @@map("districts")
+}
+
+model City {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  districtId      String
+  district        District          @relation(fields: [districtId], references: [id])
+  ShippingDetails ShippingDetails[]
+
+  @@map("cities")
 }
 
 model ShippingDetails {
-  id String @id @default(uuid())
-  address String
-  phone String
+  id         String   @id @default(uuid())
+  address    String
+  phone      String
+  email      String
+  regionId   String
+  districtId String
+  cityId     String
+  region     Region   @relation(fields: [regionId], references: [id])
+  district   District @relation(fields: [districtId], references: [id])
+  city       City     @relation(fields: [cityId], references: [id])
+  Order      Order?
+
+  @@map("shipping_details")
+}
+
+model Order {
+  id                String          @id @default(uuid())
+  customerId        String
+  vendorId          String
+  couponId          String?
+  status            OrderStatus     @default(PENDING)
+  totalAmount       Float
+  shippingDetailsId String          @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  vendor            Vendor          @relation(fields: [vendorId], references: [userId])
+  customer          Customer        @relation(fields: [customerId], references: [userId])
+  coupon            Coupon?         @relation(fields: [couponId], references: [id])
+  orderItems        OrderItem[]
+  Payment           Payment?
+  shippingDetails   ShippingDetails @relation(fields: [shippingDetailsId], references: [id])
+
+  @@map("orders")
 }
 
 model OrderItem {

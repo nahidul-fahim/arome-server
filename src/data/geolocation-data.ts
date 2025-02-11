@@ -1,4 +1,4 @@
-export const allDivision = [
+export const allRegion = [
     { "id": "1", "name": "Chattagram" },
     { "id": "2", "name": "Rajshahi" },
     { "id": "3", "name": "Khulna" },
@@ -76,7 +76,7 @@ export const allDistrict = [
     { "id": "64", "division_id": "8", "name": "Netrokona" }
 ]
 
-export const allUpazilla = [
+export const allCity = [
     { "id": "1", "district_id": "1", "name": "Debidwar" },
     { "id": "2", "district_id": "1", "name": "Barura" },
     { "id": "3", "district_id": "1", "name": "Brahmanpara" },

@@ -10,7 +10,8 @@
     "studio": "npx prisma studio",
     "build": "tsc",
     "build:dev": "tsc --env=.env.development",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "pnpx ts-node src/seed.ts"
   },
   "keywords": [],
   "author": "",

@@ -4,11 +4,9 @@ import sendResponse from "../../../shared/send-response";
 import { OrderServices } from "./order.service";
 import { dummyPaymentData } from "../../../dummy-data/dummy-payment-data";
 
-// get all customers
 const createNewOrder = catchAsync(async (req, res) => {
-  const { customerId } = req.body;
   const paymentDetails = dummyPaymentData;
-  const result = await OrderServices.createOrderIntoDB(customerId, paymentDetails);
+  const result = await OrderServices.createOrderIntoDB(req.body, paymentDetails);
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     success: true,
@@ -17,7 +15,6 @@ const createNewOrder = catchAsync(async (req, res) => {
   })
 });
 
-// get all orders from db
 const getAllOrders = catchAsync(async (req, res) => {
   const adminId = req!.user!.id;
   const result = await OrderServices.getAllOrdersFromDb(adminId);
@@ -29,7 +26,6 @@ const getAllOrders = catchAsync(async (req, res) => {
   })
 })
 
-// get vendor all orders
 const getVendorAllOrders = catchAsync(async (req, res) => {
   const { vendorId } = req.params;
   const userId = req!.user!.id;
@@ -42,7 +38,6 @@ const getVendorAllOrders = catchAsync(async (req, res) => {
   })
 })
 
-// get customer all orders
 const getCustomerAllPurchases = catchAsync(async (req, res) => {
   const { customerId } = req.params;
   const userId = req!.user!.id;
@@ -55,7 +50,6 @@ const getCustomerAllPurchases = catchAsync(async (req, res) => {
   })
 })
 
-// get single order
 const getSingleOrder = catchAsync(async (req, res) => {
   const { orderId } = req.params;
   const userId = req!.user!.id;

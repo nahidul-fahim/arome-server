@@ -4,68 +4,94 @@ import { validateUser } from "../../../utils/validate-user";
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { validateOrder } from "../../../utils/validate-order";
+import { IOrder } from "./order.interface";
 
-const createOrderIntoDB = async (customerId: string, paymentDetails: any) => {
+const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
+  const customerId = data.customerId;
+
+  // Validate the user
   await validateUser(customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+
+  // Fetch the cart with cartItems and product details
   const cart = await prisma.cart.findUniqueOrThrow({
     where: {
-      customerId
+      customerId,
     },
     include: {
       cartItems: {
         include: {
-          product: true
-        }
-      }
-    }
-  })
+          product: true,
+        },
+      },
+    },
+  });
 
-  if (!cart || cart.cartItems.length === 0) throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
-  const totalAmount = cart.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  // Check if the cart is empty
+  if (!cart || cart.cartItems.length === 0) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
+  }
+
+  // Calculate the total amount of the order
+  const totalAmount = cart.cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  // Create the order within a transaction
   const order = await prisma.$transaction(async (tx) => {
-    const order = tx.order.create({
+    // Create the order
+    const order = await tx.order.create({
       data: {
         customerId,
         vendorId: cart.cartItems[0].product.vendorId,
         totalAmount,
         status: OrderStatus.PENDING,
+        shippingDetails: {
+          create: data.shippingDetails,
+        },
         orderItems: {
           create: cart.cartItems.map((item) => ({
             productId: item.productId,
             productName: item.product.name,
             productImage: item.product.image,
             quantity: item.quantity,
-            price: item.price
-          }))
-        }
-      }
+            price: item.price,
+          })),
+        },
+      },
     });
+
+    // Delete cart items
     await tx.cartItem.deleteMany({
       where: {
-        cartId: cart.id
-      }
+        cartId: cart.id,
+      },
     });
+
+    // Delete the cart
     await tx.cart.delete({
       where: {
-        id: cart.id
-      }
+        id: cart.id,
+      },
     });
+
+    // Update product inventory
     await Promise.all(
       cart.cartItems.map(async (item) => {
         await tx.product.update({
           where: {
-            id: item.productId
+            id: item.productId,
           },
           data: {
             inventory: {
-              decrement: item.quantity
-            }
-          }
-        })
-      })
-    )
+              decrement: item.quantity,
+            },
+          },
+        });
+      }),
+    );
+
     return order;
-  })
+  });
+
+  // Create the payment record
   const payment = await prisma.payment.create({
     data: {
       orderId: order.id,
@@ -75,8 +101,8 @@ const createOrderIntoDB = async (customerId: string, paymentDetails: any) => {
     },
   });
 
-  return { order, payment }
-}
+  return { order, payment };
+};
 
 const getAllOrdersFromDb = async (adminId: string) => {
   await validateUser(adminId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);

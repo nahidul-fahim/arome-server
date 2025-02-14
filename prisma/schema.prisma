@@ -33,11 +33,12 @@ model User {
   password  String
   role      UserRole
   status    UserStatus @default(ACTIVE)
+  isDeleted Boolean    @default(false)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  Admin     Admin?
-  Vendor    Vendor?
-  Customer  Customer?
+  admin     Admin?
+  vendor    Vendor?
+  customer  Customer?
 
   @@map("users")
 }
@@ -149,68 +150,21 @@ model CartItem {
   @@map("cart_items")
 }
 
-model Region {
-  id              String            @id @default(uuid())
-  name            String            @unique
-  districts       District[]
-  ShippingDetails ShippingDetails[]
-
-  @@map("regions")
-}
-
-model District {
-  id              String            @id @default(uuid())
-  name            String            @unique
-  regionId        String
-  region          Region            @relation(fields: [regionId], references: [id])
-  cities          City[]
-  ShippingDetails ShippingDetails[]
-
-  @@map("districts")
-}
-
-model City {
-  id              String            @id @default(uuid())
-  name            String            @unique
-  districtId      String
-  district        District          @relation(fields: [districtId], references: [id])
-  ShippingDetails ShippingDetails[]
-
-  @@map("cities")
-}
-
-model ShippingDetails {
-  id         String   @id @default(uuid())
-  address    String
-  phone      String
-  email      String
-  regionId   String
-  districtId String
-  cityId     String
-  region     Region   @relation(fields: [regionId], references: [id])
-  district   District @relation(fields: [districtId], references: [id])
-  city       City     @relation(fields: [cityId], references: [id])
-  Order      Order?
-
-  @@map("shipping_details")
-}
-
 model Order {
-  id                String          @id @default(uuid())
-  customerId        String
-  vendorId          String
-  couponId          String?
-  status            OrderStatus     @default(PENDING)
-  totalAmount       Float
-  shippingDetailsId String          @unique
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  vendor            Vendor          @relation(fields: [vendorId], references: [userId])
-  customer          Customer        @relation(fields: [customerId], references: [userId])
-  coupon            Coupon?         @relation(fields: [couponId], references: [id])
-  orderItems        OrderItem[]
-  Payment           Payment?
-  shippingDetails   ShippingDetails @relation(fields: [shippingDetailsId], references: [id])
+  id              String           @id @default(uuid())
+  customerId      String
+  vendorId        String
+  couponId        String?
+  status          OrderStatus      @default(PENDING)
+  totalAmount     Float
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  vendor          Vendor           @relation(fields: [vendorId], references: [userId])
+  customer        Customer         @relation(fields: [customerId], references: [userId])
+  coupon          Coupon?          @relation(fields: [couponId], references: [id])
+  orderItems      OrderItem[]
+  Payment         Payment?
+  ShippingDetails ShippingDetails?
 
   @@map("orders")
 }
@@ -229,6 +183,47 @@ model OrderItem {
   product      Product  @relation(fields: [productId], references: [id])
 
   @@map("order_items")
+}
+
+model ShippingDetails {
+  id         String   @id @default(uuid())
+  address    String
+  phone      String
+  email      String
+  cityId     String
+  city       City     @relation(fields: [cityId], references: [id])
+  orderId    String   @unique
+  order      Order    @relation(fields: [orderId], references: [id])
+
+  @@map("shipping_details")
+}
+
+model Region {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  districts       District[]
+
+  @@map("regions")
+}
+
+model District {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  regionId        String
+  region          Region            @relation(fields: [regionId], references: [id])
+  cities          City[]
+
+  @@map("districts")
+}
+
+model City {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  districtId      String
+  district        District          @relation(fields: [districtId], references: [id])
+  ShippingDetails ShippingDetails[]
+
+  @@map("cities")
 }
 
 model Coupon {

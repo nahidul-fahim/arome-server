@@ -11,6 +11,7 @@ const createNewAdminIntoDb = async (data: any) => {
   const newAdmin = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
+        name: data.name,
         email: data.email,
         password: hashedPassword,
         role: UserRole.ADMIN,

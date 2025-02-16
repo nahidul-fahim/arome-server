@@ -13,9 +13,8 @@ export interface IShippingDetails {
   address: string;
   phone: string;
   email: string;
-  regionId: string;
-  districtId: string;
   cityId: string;
+  orderId: string;
 }
 
 export interface IOrder {

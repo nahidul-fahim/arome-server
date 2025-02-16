@@ -8,11 +8,7 @@ import { IOrder } from "./order.interface";
 
 const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
   const customerId = data.customerId;
-
-  // Validate the user
   await validateUser(customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
-
-  // Fetch the cart with cartItems and product details
   const cart = await prisma.cart.findUniqueOrThrow({
     where: {
       customerId,
@@ -26,26 +22,19 @@ const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
     },
   });
 
-  // Check if the cart is empty
   if (!cart || cart.cartItems.length === 0) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
   }
 
-  // Calculate the total amount of the order
   const totalAmount = cart.cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // Create the order within a transaction
   const order = await prisma.$transaction(async (tx) => {
-    // Create the order
     const order = await tx.order.create({
       data: {
         customerId,
         vendorId: cart.cartItems[0].product.vendorId,
         totalAmount,
         status: OrderStatus.PENDING,
-        shippingDetails: {
-          create: data.shippingDetails,
-        },
         orderItems: {
           create: cart.cartItems.map((item) => ({
             productId: item.productId,
@@ -55,24 +44,26 @@ const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
             price: item.price,
           })),
         },
+        ShippingDetails: {
+          create: {
+            ...data.shippingDetails,
+          }
+        }
       },
     });
 
-    // Delete cart items
     await tx.cartItem.deleteMany({
       where: {
         cartId: cart.id,
       },
     });
 
-    // Delete the cart
     await tx.cart.delete({
       where: {
         id: cart.id,
       },
     });
 
-    // Update product inventory
     await Promise.all(
       cart.cartItems.map(async (item) => {
         await tx.product.update({
@@ -91,7 +82,6 @@ const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
     return order;
   });
 
-  // Create the payment record
   const payment = await prisma.payment.create({
     data: {
       orderId: order.id,

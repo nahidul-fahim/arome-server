@@ -14,8 +14,7 @@ const loginUserIntoDb = async (payload: { email: string; password: string }) => 
     where: {
       email: payload.email,
       status: UserStatus.ACTIVE,
-    },
-    include: userSelectFields
+    }
   });
 
   const isCorrectPassword = await bcrypt.compare(payload.password, userData.password);

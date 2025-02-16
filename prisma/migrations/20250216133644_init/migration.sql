@@ -10,10 +10,12 @@ CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PAID', 'SHIPPED', 'COMPLETED', 'C
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
+    "name" TEXT,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "UserRole" NOT NULL,
     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -24,7 +26,6 @@ CREATE TABLE "users" (
 CREATE TABLE "customers" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "profilePhoto" TEXT,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -38,7 +39,6 @@ CREATE TABLE "customers" (
 CREATE TABLE "admins" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "profilePhoto" TEXT,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -52,11 +52,11 @@ CREATE TABLE "admins" (
 CREATE TABLE "vendors" (
     "id" TEXT NOT NULL,
     "shopName" TEXT NOT NULL,
+    "slug" TEXT,
     "isBlacklisted" BOOLEAN NOT NULL DEFAULT false,
-    "email" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "logo" TEXT,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -68,12 +68,12 @@ CREATE TABLE "vendors" (
 CREATE TABLE "products" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
+    "price" DECIMAL(65,30) NOT NULL,
     "categoryId" TEXT NOT NULL,
     "inventory" INTEGER NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "image" TEXT NOT NULL,
-    "discount" DOUBLE PRECISION,
+    "discount" DECIMAL(65,30),
     "vendorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE "products" (
 CREATE TABLE "categories" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT DEFAULT '',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -107,10 +107,7 @@ CREATE TABLE "cart_items" (
     "id" TEXT NOT NULL,
     "cartId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "productName" TEXT NOT NULL,
-    "productImage" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
-    "price" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -122,9 +119,9 @@ CREATE TABLE "orders" (
     "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "vendorId" TEXT NOT NULL,
-    "couponId" TEXT,
+    "couponId" TEXT DEFAULT '',
     "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
-    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "totalAmount" DECIMAL(65,30),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -136,10 +133,7 @@ CREATE TABLE "order_items" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "productName" TEXT NOT NULL,
-    "productImage" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -147,11 +141,49 @@ CREATE TABLE "order_items" (
 );
 
 -- CreateTable
+CREATE TABLE "shipping_details" (
+    "id" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "cityId" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+
+    CONSTRAINT "shipping_details_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "regions" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "regions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "districts" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "regionId" TEXT NOT NULL,
+
+    CONSTRAINT "districts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "cities" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "districtId" TEXT NOT NULL,
+
+    CONSTRAINT "cities_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "coupons" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
-    "description" TEXT,
-    "discount" DOUBLE PRECISION NOT NULL,
+    "description" TEXT DEFAULT '',
+    "discount" DECIMAL(65,30) NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "expiryDate" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -166,7 +198,7 @@ CREATE TABLE "reviews" (
     "userId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "rating" INTEGER NOT NULL,
-    "comment" TEXT,
+    "comment" TEXT DEFAULT '',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -177,7 +209,7 @@ CREATE TABLE "reviews" (
 CREATE TABLE "payments" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
+    "amount" DECIMAL(65,30) NOT NULL,
     "paymentDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL,
     "method" TEXT NOT NULL,
@@ -195,25 +227,16 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "customers_id_key" ON "customers"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "customers_email_key" ON "customers"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "customers_userId_key" ON "customers"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "admins_id_key" ON "admins"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "admins_email_key" ON "admins"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "admins_userId_key" ON "admins"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "vendors_id_key" ON "vendors"("id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "vendors_email_key" ON "vendors"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "vendors_userId_key" ON "vendors"("userId");
@@ -229,6 +252,18 @@ CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "carts_customerId_key" ON "carts"("customerId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "shipping_details_orderId_key" ON "shipping_details"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "regions_name_key" ON "regions"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "districts_name_key" ON "districts"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "cities_name_key" ON "cities"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "coupons_code_key" ON "coupons"("code");
@@ -252,7 +287,7 @@ ALTER TABLE "products" ADD CONSTRAINT "products_vendorId_fkey" FOREIGN KEY ("ven
 ALTER TABLE "products" ADD CONSTRAINT "products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "carts" ADD CONSTRAINT "carts_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "carts" ADD CONSTRAINT "carts_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "carts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -274,6 +309,18 @@ ALTER TABLE "order_items" ADD CONSTRAINT "order_items_orderId_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "shipping_details" ADD CONSTRAINT "shipping_details_cityId_fkey" FOREIGN KEY ("cityId") REFERENCES "cities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "shipping_details" ADD CONSTRAINT "shipping_details_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "districts" ADD CONSTRAINT "districts_regionId_fkey" FOREIGN KEY ("regionId") REFERENCES "regions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "cities" ADD CONSTRAINT "cities_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "districts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

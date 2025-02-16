@@ -29,6 +29,7 @@ enum OrderStatus {
 
 model User {
   id        String     @id @unique @default(uuid())
+  name      String?
   email     String     @unique
   password  String
   role      UserRole
@@ -46,7 +47,6 @@ model User {
 model Customer {
   id           String   @id @unique @default(uuid())
   name         String
-  email        String   @unique
   userId       String   @unique
   profilePhoto String?
   isDeleted    Boolean  @default(false)
@@ -54,7 +54,7 @@ model Customer {
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id])
   Order        Order[]
-  Cart         Cart[]
+  Cart         Cart?
 
   @@map("customers")
 }
@@ -62,7 +62,6 @@ model Customer {
 model Admin {
   id           String   @id @unique @default(uuid())
   name         String
-  email        String   @unique
   userId       String   @unique
   profilePhoto String?
   isDeleted    Boolean  @default(false)
@@ -76,11 +75,11 @@ model Admin {
 model Vendor {
   id            String    @id @unique @default(uuid())
   shopName      String
+  slug          String?
   isBlacklisted Boolean   @default(false)
-  email         String    @unique
   userId        String    @unique
   logo          String?
-  description   String?
+  description   String?   @default("")
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -94,12 +93,12 @@ model Vendor {
 model Product {
   id          String      @id @unique @default(uuid())
   name        String
-  price       Float
+  price       Decimal
   categoryId  String
   inventory   Int
-  description String?
+  description String?     @default("")
   image       String
-  discount    Float?
+  discount    Decimal?
   vendorId    String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -115,7 +114,7 @@ model Product {
 model Category {
   id          String    @id @unique @default(uuid())
   name        String    @unique
-  description String?
+  description String?   @default("")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[]
@@ -128,24 +127,21 @@ model Cart {
   customerId String     @unique
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
-  customer   Customer   @relation(fields: [customerId], references: [userId])
   cartItems  CartItem[]
+  customer   Customer   @relation(fields: [customerId], references: [id])
 
   @@map("carts")
 }
 
 model CartItem {
-  id           String   @id @default(uuid())
-  cartId       String
-  productId    String
-  productName  String
-  productImage String
-  quantity     Int      @default(1)
-  price        Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  cart         Cart     @relation(fields: [cartId], references: [id])
-  product      Product  @relation(fields: [productId], references: [id])
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@map("cart_items")
 }
@@ -154,9 +150,9 @@ model Order {
   id              String           @id @default(uuid())
   customerId      String
   vendorId        String
-  couponId        String?
+  couponId        String?          @default("")
   status          OrderStatus      @default(PENDING)
-  totalAmount     Float
+  totalAmount     Decimal?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   vendor          Vendor           @relation(fields: [vendorId], references: [userId])
@@ -170,48 +166,45 @@ model Order {
 }
 
 model OrderItem {
-  id           String   @id @default(uuid())
-  orderId      String
-  productId    String
-  productName  String
-  productImage String
-  quantity     Int
-  price        Float
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  order        Order    @relation(fields: [orderId], references: [id])
-  product      Product  @relation(fields: [productId], references: [id])
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@map("order_items")
 }
 
 model ShippingDetails {
-  id         String   @id @default(uuid())
-  address    String
-  phone      String
-  email      String
-  cityId     String
-  city       City     @relation(fields: [cityId], references: [id])
-  orderId    String   @unique
-  order      Order    @relation(fields: [orderId], references: [id])
+  id      String @id @default(uuid())
+  address String
+  phone   String
+  email   String
+  cityId  String
+  orderId String @unique
+  city    City   @relation(fields: [cityId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
 
   @@map("shipping_details")
 }
 
 model Region {
-  id              String            @id @default(uuid())
-  name            String            @unique
-  districts       District[]
+  id        String     @id @default(uuid())
+  name      String     @unique
+  districts District[]
 
   @@map("regions")
 }
 
 model District {
-  id              String            @id @default(uuid())
-  name            String            @unique
-  regionId        String
-  region          Region            @relation(fields: [regionId], references: [id])
-  cities          City[]
+  id       String @id @default(uuid())
+  name     String @unique
+  regionId String
+  region   Region @relation(fields: [regionId], references: [id])
+  cities   City[]
 
   @@map("districts")
 }
@@ -229,8 +222,8 @@ model City {
 model Coupon {
   id          String    @id @default(uuid())
   code        String    @unique
-  description String?
-  discount    Float
+  description String?   @default("")
+  discount    Decimal
   isActive    Boolean   @default(true)
   expiryDate  DateTime?
   createdAt   DateTime  @default(now())
@@ -245,7 +238,7 @@ model Review {
   userId    String
   productId String
   rating    Int
-  comment   String?
+  comment   String?  @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   product   Product  @relation(fields: [productId], references: [id])
@@ -256,7 +249,7 @@ model Review {
 model Payment {
   id          String   @id @default(uuid())
   orderId     String   @unique
-  amount      Float
+  amount      Decimal
   paymentDate DateTime @default(now())
   status      String
   method      String

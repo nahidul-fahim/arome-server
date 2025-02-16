@@ -1,82 +1,120 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../../errors/api-error";
 import prisma from "../../../shared/prisma"
-import { UserStatus } from "@prisma/client";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
 import { IAdmin } from "./admin.interface";
+import { UserRole } from "@prisma/client";
 
 // get all admins
 const getAllAdminsFromDb = async () => {
-  const allAdmins = await prisma.admin.findMany({
+  const allAdmins = await prisma.user.findMany({
     where: {
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
       isDeleted: false
     }
   });
-  return allAdmins;
+  return allAdmins.map((admin) => {
+    return excludeSensitiveFields(admin, ["password"]);
+  })
 }
 
 // get single admin
 const getSingleAdminFromDb = async (id: string) => {
-  const admin = await prisma.admin.findUniqueOrThrow({
+  const admin = await prisma.user.findUniqueOrThrow({
     where: {
-      userId: id,
+      id,
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
       isDeleted: false
     }
   });
-  return admin;
+  return excludeSensitiveFields(admin, ["password"]);
 }
 
 // update admin
 const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IAdmin>) => {
-  const currentAdmin = await prisma.admin.findUniqueOrThrow({
-    where: {
-      userId: id,
-      isDeleted: false
-    }
-  });
-  if (!currentAdmin) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Admin not found!")
-  }
-  if (cloudinaryResult && cloudinaryResult.secure_url) {
-    updatedData.profilePhoto = cloudinaryResult.secure_url;
-  }
-  const result = await prisma.admin.update({
+  const user = await prisma.user.findUniqueOrThrow({
     where: {
       id,
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
       isDeleted: false
     },
-    data: updatedData
+    include: {
+      admin: true
+    }
+  });
+  if (!user || !user.admin) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Admin not found!")
+  }
+  const adminUpdateData: Partial<IAdmin> = { ...updatedData };
+  if (cloudinaryResult && cloudinaryResult.secure_url) {
+    adminUpdateData.profilePhoto = cloudinaryResult.secure_url;
+  };
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedUser = await tx.user.update({
+      where: {
+        id,
+        role: {
+          in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        },
+        isDeleted: false
+      },
+      data: {
+        name: adminUpdateData?.name,
+      }
+    });
+    const updatedAdmin = await tx.admin.update({
+      where: {
+        userId: id,
+        isDeleted: false
+      },
+      data: {
+        ...adminUpdateData,
+      }
+    });
+    return { ...updatedUser, admin: updatedAdmin };
   })
-  return result;
+  return excludeSensitiveFields(result, ["password"]);
 };
 
 // delete admin
 const deleteAdminFromDb = async (id: string) => {
-  const admin = await prisma.admin.findUnique({
+  const admin = await prisma.user.findUnique({
     where: {
-      userId: id,
+      id,
+      role: UserRole.ADMIN,
       isDeleted: false
+    },
+    include: {
+      admin: true
     }
   });
   if (!admin) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Admin not found!")
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found!")
   }
   const result = await prisma.$transaction(async (tx) => {
-    const deletedAdmin = await tx.admin.update({
+    const deletedUser = await tx.user.update({
       where: {
-        userId: id,
+        id: id,
+        role: UserRole.ADMIN,
         isDeleted: false
       },
       data: {
         isDeleted: true
       }
     })
-    const deletedUser = await tx.user.update({
+    await tx.admin.update({
       where: {
-        id: deletedAdmin.userId
+        userId: id,
+        isDeleted: false
       },
       data: {
-        status: UserStatus.SUSPENDED
+        isDeleted: true
       }
     })
     const deletedInfo = excludeSensitiveFields(deletedUser, ["status", "password"]);

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserControllerValidation = void 0;
 const zod_1 = require("zod");
-const customerValidation = zod_1.z.object({
+const userValidation = zod_1.z.object({
     body: zod_1.z.object({
         name: zod_1.z.string({
             invalid_type_error: "Name must be a string",
@@ -36,6 +36,6 @@ const vendorValidation = zod_1.z.object({
     })
 });
 exports.UserControllerValidation = {
-    customerValidation,
+    userValidation,
     vendorValidation
 };

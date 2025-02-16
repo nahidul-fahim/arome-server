@@ -73,21 +73,29 @@ model Admin {
 }
 
 model Vendor {
-  id            String    @id @unique @default(uuid())
-  shopName      String
-  slug          String?
-  isBlacklisted Boolean   @default(false)
-  userId        String    @unique
-  logo          String?
-  description   String?   @default("")
-  isDeleted     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  products      Product[]
+  id            String   @id @unique @default(uuid())
+  name          String
+  isBlacklisted Boolean  @default(false)
+  userId        String   @unique
+  profilePhoto  String?
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   orders        Order[]
-  user          User      @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+  Shop          Shop[]
 
   @@map("vendors")
+}
+
+model Shop {
+  id          String    @id @unique @default(uuid())
+  name        String
+  logo        String
+  description String
+  vendorId    String
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+  Product     Product[]
 }
 
 model Product {
@@ -99,11 +107,11 @@ model Product {
   description String?     @default("")
   image       String
   discount    Decimal?
-  vendorId    String
+  shopId      String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  vendor      Vendor      @relation(fields: [vendorId], references: [userId])
   category    Category    @relation(fields: [categoryId], references: [id])
+  shop        Shop        @relation(fields: [shopId], references: [id])
   reviews     Review[]
   orderItems  OrderItem[]
   CartItem    CartItem[]

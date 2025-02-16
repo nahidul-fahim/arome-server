@@ -10,19 +10,19 @@ const router = express.Router();
 router.post(
   "/create-admin",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(UserControllerValidation.customerValidation),
+  validateRequest(UserControllerValidation.userValidation),
   UserController.createNewAdmin
 )
 
 router.post(
   "/create-customer",
-  validateRequest(UserControllerValidation.customerValidation),
+  validateRequest(UserControllerValidation.userValidation),
   UserController.createNewCustomer
 )
 
 router.post(
   "/create-vendor",
-  validateRequest(UserControllerValidation.vendorValidation),
+  validateRequest(UserControllerValidation.userValidation),
   UserController.createNewVendor
 )
 

@@ -40,7 +40,7 @@ router.patch(
 
 router.delete(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.SUPER_ADMIN),
   AdminController.deleteAdmin
 )
 

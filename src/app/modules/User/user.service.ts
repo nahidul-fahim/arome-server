@@ -4,6 +4,8 @@ import { UserRole } from '@prisma/client';
 import { jwtHelpers } from '../../../helpers/jwt-helpers';
 import { Secret } from 'jsonwebtoken';
 import config from '../../../config';
+import { IVendor } from '../Vendor/vendor.interface';
+import { excludeSensitiveFields } from '../../../utils/sanitize';
 
 // create admin
 const createNewAdminIntoDb = async (data: any) => {
@@ -17,19 +19,18 @@ const createNewAdminIntoDb = async (data: any) => {
         role: UserRole.ADMIN,
       }
     })
-    const admin = await tx.admin.create({
+    await tx.admin.create({
       data: {
         name: data.name,
-        email: data.email,
         userId: newUser.id
       }
     })
-    return admin;
+    return newUser;
   });
 
   const accessToken = jwtHelpers.generateToken(
     {
-      id: newAdmin.userId,
+      id: newAdmin.id,
       email: newAdmin.email,
       role: UserRole.ADMIN,
     },
@@ -39,18 +40,18 @@ const createNewAdminIntoDb = async (data: any) => {
 
   const refreshToken = jwtHelpers.generateToken(
     {
-      id: newAdmin.userId,
+      id: newAdmin.id,
       email: newAdmin.email,
       role: UserRole.ADMIN,
     },
     config.jwt.refresh_token_secret as Secret,
     config.jwt.refresh_token_expires_in as string
   );
-
+  const result = excludeSensitiveFields(newAdmin, ["password"]);
   return {
     accessToken,
     refreshToken,
-    newAdmin
+    result
   };
 }
 
@@ -60,24 +61,24 @@ const createNewCustomerIntoDb = async (data: any) => {
   const newCustomer = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
+        name: data.name,
         email: data.email,
         password: hashedPassword,
         role: UserRole.CUSTOMER,
       }
     })
-    const customer = await tx.customer.create({
+    await tx.customer.create({
       data: {
         name: data.name,
-        email: data.email,
         userId: newUser.id
       }
     })
-    return customer;
+    return newUser;
   });
 
   const accessToken = jwtHelpers.generateToken(
     {
-      id: newCustomer.userId,
+      id: newCustomer.id,
       email: newCustomer.email,
       role: UserRole.CUSTOMER,
     },
@@ -87,48 +88,46 @@ const createNewCustomerIntoDb = async (data: any) => {
 
   const refreshToken = jwtHelpers.generateToken(
     {
-      id: newCustomer.userId,
+      id: newCustomer.id,
       email: newCustomer.email,
       role: UserRole.CUSTOMER,
     },
     config.jwt.refresh_token_secret as Secret,
     config.jwt.refresh_token_expires_in as string
   );
-
+  const result = excludeSensitiveFields(newCustomer, ["password"]);
   return {
     accessToken,
     refreshToken,
-    newCustomer
+    result
   };
 };
 
 
 // create new vendor
-const createNewVendorIntoDb = async (data: any) => {
+const createNewVendorIntoDb = async (data: IVendor) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
   const newVendor = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
+        name: data.name,
         email: data.email,
         password: hashedPassword,
         role: UserRole.VENDOR,
       }
     })
-    const vendor = await tx.vendor.create({
+    await tx.vendor.create({
       data: {
-        shopName: data.shopName,
-        email: data.email,
-        userId: newUser.id,
-        logo: data.logo,
-        description: data.description,
+        name: data.name,
+        userId: newUser.id
       }
     })
-    return vendor;
+    return newUser;
   })
 
   const accessToken = jwtHelpers.generateToken(
     {
-      id: newVendor.userId,
+      id: newVendor.id,
       email: newVendor.email,
       role: UserRole.VENDOR,
     },
@@ -138,7 +137,7 @@ const createNewVendorIntoDb = async (data: any) => {
 
   const refreshToken = jwtHelpers.generateToken(
     {
-      id: newVendor.userId,
+      id: newVendor.id,
       email: newVendor.email,
       role: UserRole.VENDOR,
     },
@@ -146,10 +145,12 @@ const createNewVendorIntoDb = async (data: any) => {
     config.jwt.refresh_token_expires_in as string
   );
 
+  const result = excludeSensitiveFields(newVendor, ["password"]);
+
   return {
     accessToken,
     refreshToken,
-    newVendor
+    result
   };
 };
 

@@ -6,6 +6,9 @@ import { UserStatus } from "@prisma/client";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
 
 
+/* TODO: FIX THE VENDOR LIKE CUSTOMER AND ADMIN. ALSO, HAVE ADDED SHOP TO THE VENDOR. ADD FUNCTIONALITY FOR THAT AS WELL */
+
+
 // get all vendors
 const getAllVendorsFromDb = async () => {
   const allVendors = await prisma.vendor.findMany({

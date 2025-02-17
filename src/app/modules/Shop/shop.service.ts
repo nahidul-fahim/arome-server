@@ -24,7 +24,25 @@ const createNewShopIntoDb = async (data: IShop, cloudinaryResult: any) => {
     return result;
 };
 
+const getVendorShopFromDb = async (vendorId: string, userId: string) => {
+    const vendor = await validateUser(vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
+    const shop = await prisma.shop.findFirst({
+        where: {
+            vendorId: vendor.id
+        },
+        include: {
+            vendor: true,
+        }
+    });
+    const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
+    const isAuthorized = shop?.vendorId === userId || isAdmin;
+    if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+    return shop;
+}
+
 
 export const ShopServices = {
-    createNewShopIntoDb
+    createNewShopIntoDb,
+    getVendorShopFromDb
 }

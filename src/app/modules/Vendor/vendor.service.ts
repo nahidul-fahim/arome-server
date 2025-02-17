@@ -5,7 +5,8 @@ import { IVendor } from "./vendor.interface";
 import { UserStatus } from "@prisma/client";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
 
-/* TODO: FIX THE VENDOR LIKE CUSTOMER AND ADMIN. ALSO, HAVE ADDED SHOP TO THE VENDOR. ADD FUNCTIONALITY FOR THAT AS WELL */
+// todo: delete shop when deleting a vendor
+// todo: delete all products when deleting a shop
 
 // get all vendors
 const getAllVendorsFromDb = async () => {

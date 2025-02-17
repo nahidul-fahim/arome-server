@@ -25,3 +25,6 @@ router.post(
     },
     ShopController.createNewShop
 )
+
+
+export const shopRoutes = router;

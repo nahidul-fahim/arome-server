@@ -10,19 +10,19 @@ const router = express.Router();
 
 router.get(
   "/",
-  auth(UserRole.ADMIN),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   VendorController.getAllVendors
 )
 
 router.get(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.VENDOR),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.VENDOR),
   VendorController.singleVendor
 )
 
 router.patch(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.VENDOR),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.VENDOR),
   upload.single('file'),
   sendImageToCloudinary,
   (req: Request, res: Response, next: NextFunction) => {
@@ -40,7 +40,7 @@ router.patch(
 
 router.delete(
   "/:id",
-  auth(UserRole.ADMIN, UserRole.VENDOR),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.VENDOR),
   VendorController.deleteVendor
 )
 

@@ -5,7 +5,6 @@ import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 
-
 const createNewShopIntoDb = async (data: IShop, cloudinaryResult: any) => {
     const vendor = await validateUser(data.vendorId, UserStatus.ACTIVE, [UserRole.VENDOR]);
     const hasExistingShop = await prisma.shop.findFirst({
@@ -41,6 +40,9 @@ const getVendorShopFromDb = async (vendorId: string, userId: string) => {
     return shop;
 }
 
+const updateShopIntoDb = async (id: string, data: IShop, cloudinaryResult: any) => {
+    
+}
 
 export const ShopServices = {
     createNewShopIntoDb,

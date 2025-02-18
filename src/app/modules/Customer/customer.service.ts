@@ -5,6 +5,7 @@ import { UserRole, UserStatus } from "@prisma/client";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
 import { ICustomer } from "./customer.interface";
 
+// todo: fix customer service like the vendor service
 
 // get all customers
 const getAllCustomersFromDb = async () => {
@@ -95,7 +96,9 @@ const deleteCustomerFromDb = async (id: string) => {
   const result = await prisma.$transaction(async (tx) => {
     const deletedUser = await tx.user.update({
       where: {
-        id
+        id,
+        isDeleted: false,
+        role: UserRole.CUSTOMER
       },
       data: {
         isDeleted: true

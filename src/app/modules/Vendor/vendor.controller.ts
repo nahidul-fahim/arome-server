@@ -16,7 +16,7 @@ const getAllVendors = catchAsync(async (req, res) => {
 
 // get single vendor
 const singleVendor = catchAsync(async (req, res) => {
-  const result = await VendorServices.getSingleVendorFromDb(req.params.id);
+  const result = await VendorServices.getSingleVendorFromDb(req.params.id, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -28,7 +28,7 @@ const singleVendor = catchAsync(async (req, res) => {
 // update vendor
 const updateVendor = catchAsync(async (req, res) => {
   const cloudinaryResult = req.cloudinaryResult;
-  const result = await VendorServices.updateVendorIntoDb(cloudinaryResult, req.params.id, req.body);
+  const result = await VendorServices.updateVendorIntoDb(cloudinaryResult, req.params.id, req.body, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -39,7 +39,7 @@ const updateVendor = catchAsync(async (req, res) => {
 
 // delete vendor
 const deleteVendor = catchAsync(async (req, res) => {
-  const result = await VendorServices.deleteVendorFromDb(req.params.id);
+  const result = await VendorServices.deleteVendorFromDb(req.params.id, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

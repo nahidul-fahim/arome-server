@@ -1,87 +1,124 @@
+import { Vendor } from './../../../../node_modules/.pnpm/@prisma+client@6.3.0_prisma@6.3.0_typescript@5.7.3__typescript@5.7.3/node_modules/.prisma/client/index.d';
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../../errors/api-error";
 import prisma from "../../../shared/prisma"
 import { IVendor } from "./vendor.interface";
-import { UserStatus } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
+import { validateUser } from "../../../utils/validate-user";
+import { validateAuthorized } from "../../../utils/validate-authorized";
 
-// todo: delete shop when deleting a vendor
-// todo: delete all products when deleting a shop
-
-// get all vendors
 const getAllVendorsFromDb = async () => {
-  const allVendors = await prisma.vendor.findMany({
+  const allVendors = await prisma.user.findMany({
     where: {
+      role: UserRole.VENDOR,
       isDeleted: false
+    },
+    include: {
+      vendor: true
     }
   });
   return allVendors;
 }
 
 // get single vendor
-const getSingleVendorFromDb = async (id: string) => {
-  const vendor = await prisma.vendor.findUniqueOrThrow({
+const getSingleVendorFromDb = async (vendorId: string, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  await validateAuthorized(vendorId, currentUser.role, currentUser.id);
+  const result = await prisma.user.findUnique({
     where: {
-      userId: id,
+      id: vendorId,
       isDeleted: false
+    },
+    include: {
+      vendor: true
     }
   });
-  return vendor;
+  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!");
+  return result;
 }
 
 // update vendor
-const updateVendorIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IVendor>) => {
-  const currentVendor = await prisma.vendor.findUniqueOrThrow({
+const updateVendorIntoDb = async (cloudinaryResult: any, vendorId: string, updatedData: Partial<IVendor>, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  await validateAuthorized(vendorId, currentUser.role, currentUser.id);
+  const user = await prisma.user.findUnique({
     where: {
-      userId: id,
-      isDeleted: false
-    }
-  });
-  if (!currentVendor) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!")
-  }
-  if (cloudinaryResult && cloudinaryResult.secure_url) {
-    updatedData.logo = cloudinaryResult.secure_url;
-  }
-  const result = await prisma.vendor.update({
-    where: {
-      userId: id,
+      id: vendorId,
+      role: UserRole.VENDOR,
       isDeleted: false
     },
-    data: updatedData
+    include: {
+      vendor: true
+    }
+  });
+  if (!user || !user.vendor) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found!")
+  }
+  const vendorUpdateData: Partial<IVendor> = { ...updatedData };
+  if (cloudinaryResult && cloudinaryResult.secure_url) {
+    vendorUpdateData.profilePhoto = cloudinaryResult.secure_url;
+  };
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedUser = await tx.user.update({
+      where: {
+        id: vendorId,
+        role: UserRole.VENDOR,
+        isDeleted: false
+      },
+      data: {
+        name: vendorUpdateData?.name,
+      }
+    });
+    const updatedVendor = await tx.vendor.update({
+      where: {
+        userId: vendorId,
+        isDeleted: false
+      },
+      data: {
+        ...vendorUpdateData,
+      }
+    });
+    return { ...updatedUser, vendor: updatedVendor };
   })
-  return result;
+  return excludeSensitiveFields(result, ["password"]);
 };
 
 // delete vendor
-const deleteVendorFromDb = async (id: string) => {
-  const vendor = await prisma.vendor.findUnique({
+const deleteVendorFromDb = async (vendorId: string, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  await validateAuthorized(vendorId, currentUser.role, currentUser.id);
+  const user = await prisma.user.findUnique({
     where: {
-      userId: id,
+      id: vendorId,
+      role: UserRole.VENDOR,
       isDeleted: false
+    },
+    include: {
+      vendor: true
     }
   });
-  if (!vendor) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!")
+  if (!user || !user.vendor) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found!")
   }
   const result = await prisma.$transaction(async (tx) => {
-    const deletedVendor = await tx.vendor.update({
+    const deletedUser = await tx.user.update({
       where: {
-        userId: id,
+        id: vendorId,
+      },
+      data: {
+        isDeleted: true
+      }
+    });
+    await tx.vendor.update({
+      where: {
+        userId: vendorId,
         isDeleted: false
       },
       data: {
         isDeleted: true
       }
-    })
-    const deletedUser = await tx.user.update({
-      where: {
-        id: deletedVendor.userId
-      },
-      data: {
-        status: UserStatus.SUSPENDED
-      }
-    })
+    });
     const deletedInfo = excludeSensitiveFields(deletedUser, ["status", "password"]);
     return deletedInfo;
   })

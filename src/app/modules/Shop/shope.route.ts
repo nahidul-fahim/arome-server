@@ -5,6 +5,8 @@ import { sendImageToCloudinary, upload } from "../../../utils/send-image-to-clou
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { ShopController } from "./shop.controller";
+import { ShopValidation } from "./shop.validation";
+import validateRequest from "../../../middlewares/validate-request";
 
 const router = express.Router();
 
@@ -23,6 +25,7 @@ router.post(
             next(new ApiError(StatusCodes.BAD_REQUEST, "Invalid JSON data in req.body.data"));
         }
     },
+    validateRequest(ShopValidation.createShopValidation),
     ShopController.createNewShop
 )
 

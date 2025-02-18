@@ -5,6 +5,8 @@ import { excludeSensitiveFields } from "../../../utils/sanitize";
 import { IAdmin } from "./admin.interface";
 import { UserRole } from "@prisma/client";
 
+// todo: fix admin service like the vendor service
+
 // get all admins
 const getAllAdminsFromDb = async () => {
   const allAdmins = await prisma.user.findMany({

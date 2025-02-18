@@ -94,7 +94,7 @@ model Shop {
   logo        String
   description String
   vendorId    String
-  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+  vendor      Vendor    @relation(fields: [vendorId], references: [userId])
   Product     Product[]
 }
 
@@ -136,7 +136,7 @@ model Cart {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   cartItems  CartItem[]
-  customer   Customer   @relation(fields: [customerId], references: [id])
+  customer   Customer   @relation(fields: [customerId], references: [userId])
 
   @@map("carts")
 }

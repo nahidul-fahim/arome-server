@@ -18,7 +18,9 @@ const getAllVendorsFromDb = async () => {
       vendor: true
     }
   });
-  return allVendors;
+  return allVendors.map((vendor) => {
+    return excludeSensitiveFields(vendor, ["password"]);
+  });
 }
 
 // get single vendor
@@ -28,14 +30,15 @@ const getSingleVendorFromDb = async (vendorId: string, userId: string) => {
   const result = await prisma.user.findUnique({
     where: {
       id: vendorId,
+      role: UserRole.VENDOR,
       isDeleted: false
     },
     include: {
       vendor: true
     }
   });
-  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!");
-  return result;
+  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
+  return excludeSensitiveFields(result, ["password"]);
 }
 
 // update vendor

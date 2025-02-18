@@ -4,8 +4,8 @@ import prisma from "../../../shared/prisma"
 import { UserRole, UserStatus } from "@prisma/client";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
 import { ICustomer } from "./customer.interface";
-
-// todo: fix customer service like the vendor service
+import { validateUser } from "../../../utils/validate-user";
+import { validateAuthorized } from "../../../utils/validate-authorized";
 
 // get all customers
 const getAllCustomersFromDb = async () => {
@@ -24,10 +24,12 @@ const getAllCustomersFromDb = async () => {
 }
 
 // get single customer
-const getSingleCustomerFromDb = async (id: string) => {
-  const customer = await prisma.user.findUniqueOrThrow({
+const getSingleCustomerFromDb = async (customerId: string, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  await validateAuthorized(customerId, currentUser.role, currentUser.id);
+  const result = await prisma.user.findUnique({
     where: {
-      id,
+      id: customerId,
       role: UserRole.CUSTOMER,
       isDeleted: false
     },
@@ -35,12 +37,15 @@ const getSingleCustomerFromDb = async (id: string) => {
       customer: true
     }
   });
-  return excludeSensitiveFields(customer, ["password"]);
+  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
+  return excludeSensitiveFields(result, ["password"]);
 }
 
 // update customer
-const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<ICustomer>) => {
-  const user = await prisma.user.findUniqueOrThrow({
+const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<ICustomer>, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  await validateAuthorized(id, currentUser.role, currentUser.id);
+  const user = await prisma.user.findUnique({
     where: {
       id,
       role: UserRole.CUSTOMER,
@@ -60,9 +65,7 @@ const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedDa
   const result = await prisma.$transaction(async (tx) => {
     const updatedUser = await tx.user.update({
       where: {
-        id,
-        role: UserRole.CUSTOMER,
-        isDeleted: false
+        id
       },
       data: {
         name: customerUpdateData?.name,
@@ -83,22 +86,26 @@ const updateCustomerIntoDb = async (cloudinaryResult: any, id: string, updatedDa
 };
 
 // delete customer
-const deleteCustomerFromDb = async (id: string) => {
+const deleteCustomerFromDb = async (id: string, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  await validateAuthorized(id, currentUser.role, currentUser.id);
   const user = await prisma.user.findUnique({
     where: {
       id,
+      role: UserRole.CUSTOMER,
       isDeleted: false
+    },
+    include: {
+      customer: true
     }
   });
-  if (!user) {
+  if (!user || !user.customer) {
     throw new ApiError(StatusCodes.NOT_FOUND, "User not found!")
   }
   const result = await prisma.$transaction(async (tx) => {
     const deletedUser = await tx.user.update({
       where: {
-        id,
-        isDeleted: false,
-        role: UserRole.CUSTOMER
+        id
       },
       data: {
         isDeleted: true

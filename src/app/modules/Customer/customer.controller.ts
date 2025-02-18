@@ -16,7 +16,7 @@ const getAllCustomers = catchAsync(async (req, res) => {
 
 // get single customer
 const singleCustomer = catchAsync(async (req, res) => {
-  const result = await CustomerServices.getSingleCustomerFromDb(req.params.id);
+  const result = await CustomerServices.getSingleCustomerFromDb(req.params.id, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -28,7 +28,7 @@ const singleCustomer = catchAsync(async (req, res) => {
 // update customer
 const updateCustomer = catchAsync(async (req, res) => {
   const cloudinaryResult = req.cloudinaryResult;
-  const result = await CustomerServices.updateCustomerIntoDb(cloudinaryResult, req.params.id, req.body);
+  const result = await CustomerServices.updateCustomerIntoDb(cloudinaryResult, req.params.id, req.body, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -39,7 +39,7 @@ const updateCustomer = catchAsync(async (req, res) => {
 
 // delete customer
 const deleteCustomer = catchAsync(async (req, res) => {
-  const result = await CustomerServices.deleteCustomerFromDb(req.params.id);
+  const result = await CustomerServices.deleteCustomerFromDb(req.params.id, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

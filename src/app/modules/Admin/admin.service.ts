@@ -5,9 +5,7 @@ import { excludeSensitiveFields } from "../../../utils/sanitize";
 import { IAdmin } from "./admin.interface";
 import { UserRole, UserStatus } from "@prisma/client";
 import { validateUser } from "../../../utils/validate-user";
-import { validateAuthorized } from "../../../utils/validate-authorized";
 
-// get all admins
 const getAllAdminsFromDb = async () => {
   const allAdmins = await prisma.user.findMany({
     where: {
@@ -22,7 +20,6 @@ const getAllAdminsFromDb = async () => {
   })
 }
 
-// get single admin
 const getSingleAdminFromDb = async (id: string) => {
   const admin = await prisma.user.findUnique({
     where: {
@@ -37,7 +34,6 @@ const getSingleAdminFromDb = async (id: string) => {
   return excludeSensitiveFields(admin, ["password"]);
 }
 
-// update admin
 const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IAdmin>, userId: string) => {
   const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   if (id !== currentUser.id || currentUser.role !== UserRole.SUPER_ADMIN) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
@@ -87,7 +83,6 @@ const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData:
   return excludeSensitiveFields(result, ["password"]);
 };
 
-// delete admin
 const deleteAdminFromDb = async (id: string, userId: string) => {
   const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   if (id !== currentUser.id || currentUser.role !== UserRole.SUPER_ADMIN) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");

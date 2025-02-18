@@ -6,7 +6,7 @@ import { UserService } from "./user.service";
 // create new admin
 const createNewAdmin = catchAsync(async (req, res) => {
   const result = await UserService.createNewAdminIntoDb(req.body);
-  const { refreshToken } = result;
+  const { refreshToken, accessToken, result: user } = result;
   res.cookie('refreshToken', refreshToken, {
     secure: false,
     httpOnly: true,
@@ -17,8 +17,8 @@ const createNewAdmin = catchAsync(async (req, res) => {
     success: true,
     message: "Admin created successfully!",
     data: {
-      accessToken: result.accessToken,
-      result: result.newAdmin
+      accessToken: accessToken,
+      result: user
     }
   })
 })
@@ -26,7 +26,7 @@ const createNewAdmin = catchAsync(async (req, res) => {
 // create new customer
 const createNewCustomer = catchAsync(async (req, res) => {
   const result = await UserService.createNewCustomerIntoDb(req.body);
-  const { refreshToken } = result;
+  const { refreshToken, accessToken, result: user } = result;
   res.cookie('refreshToken', refreshToken, {
     secure: false,
     httpOnly: true,
@@ -37,8 +37,8 @@ const createNewCustomer = catchAsync(async (req, res) => {
     success: true,
     message: "Customer created successfully!",
     data: {
-      accessToken: result.accessToken,
-      result: result.newCustomer
+      accessToken: accessToken,
+      result: user
     }
   })
 });
@@ -46,7 +46,7 @@ const createNewCustomer = catchAsync(async (req, res) => {
 // create new vendor
 const createNewVendor = catchAsync(async (req, res) => {
   const result = await UserService.createNewVendorIntoDb(req.body);
-  const { refreshToken } = result;
+  const { refreshToken, accessToken, result: user } = result;
   res.cookie('refreshToken', refreshToken, {
     secure: false,
     httpOnly: true,
@@ -57,8 +57,8 @@ const createNewVendor = catchAsync(async (req, res) => {
     success: true,
     message: "Vendor created successfully!",
     data: {
-      accessToken: result.accessToken,
-      result: result.newVendor
+      accessToken: accessToken,
+      result: user
     }
   })
 })

@@ -48,9 +48,21 @@ const deleteAdmin = catchAsync(async (req, res) => {
   })
 });
 
+// blacklist vendor
+const vendorStatusUpdate = catchAsync(async (req, res) => {
+  const result = await AdminServices.vendorStatusUpdateIntoDb(req.params.id, req.body, req!.user!.id);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Blacklisted vendor successfully!",
+    data: result
+  })
+});
+
 export const AdminController = {
   getAllAdmins,
   singleAdmin,
   updateAdmin,
-  deleteAdmin
+  deleteAdmin,
+  vendorStatusUpdate
 }

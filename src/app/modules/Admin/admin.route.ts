@@ -5,23 +5,25 @@ import { sendImageToCloudinary, upload } from "../../../utils/send-image-to-clou
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { AdminController } from "./admin.controller";
+import validateRequest from "../../../middlewares/validate-request";
+import { AdminValidation } from "./admin.validation";
 
 const router = express.Router();
 
 router.get(
-  "/",
+  "/all-admins",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   AdminController.getAllAdmins
 )
 
 router.get(
-  "/:id",
+  "/single-admin/:id",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   AdminController.singleAdmin
 )
 
 router.patch(
-  "/:id",
+  "/update-admin/:id",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   upload.single('file'),
   sendImageToCloudinary,
@@ -39,9 +41,16 @@ router.patch(
 );
 
 router.delete(
-  "/:id",
+  "/delete-admin/:id",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   AdminController.deleteAdmin
+)
+
+router.patch(
+  "/vendor-status-update/:id",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  validateRequest(AdminValidation.vendorStatusValidation),
+  AdminController.vendorStatusUpdate
 )
 
 

@@ -125,10 +125,59 @@ const deleteAdminFromDb = async (id: string, userId: string) => {
   return result;
 }
 
+const vendorStatusUpdateIntoDb = async (vendorId: string, updatedData: Record<string, boolean>, userId: string) => {
+  await validateUser(userId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  const user = await prisma.user.findUnique({
+    where: {
+      id: vendorId,
+      role: UserRole.VENDOR,
+      isDeleted: false
+    },
+    include: {
+      vendor: true
+    }
+  });
+  if (!user || !user.vendor) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!");
+  }
+  const updatedStatusData: Record<string, any> = { ...updatedData };
+  if (updatedData.isBlacklisted) {
+    updatedStatusData.status = UserStatus.SUSPENDED
+  }
+  else if (!updatedData.isBlacklisted) {
+    updatedStatusData.status = UserStatus.ACTIVE
+  }
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedUser = await tx.user.update({
+      where: {
+        id: vendorId,
+        role: UserRole.VENDOR,
+        isDeleted: false
+      },
+      data: {
+        status: updatedStatusData.status
+      }
+    })
+    await tx.vendor.update({
+      where: {
+        userId: vendorId,
+        isDeleted: false
+      },
+      data: {
+        isBlacklisted: updatedStatusData.isBlacklisted
+      }
+    });
+    const updatedInfo = excludeSensitiveFields(updatedUser, ["password"]);
+    return updatedInfo;
+  })
+  return result;
+}
+
 
 export const AdminServices = {
   getAllAdminsFromDb,
   getSingleAdminFromDb,
   updateAdminIntoDb,
-  deleteAdminFromDb
+  deleteAdminFromDb,
+  vendorStatusUpdateIntoDb
 }

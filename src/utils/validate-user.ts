@@ -8,7 +8,8 @@ export const validateUser = async (userId: string, status: UserStatus, roles: Us
         where: {
             id: userId,
             status,
-            role: { in: roles }
+            role: { in: roles },
+            isDeleted: false
         }
     });
     if (!user) throw new ApiError(StatusCodes.NOT_FOUND, `Invalid user: ${userId}`);

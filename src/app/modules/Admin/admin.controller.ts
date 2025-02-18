@@ -28,7 +28,7 @@ const singleAdmin = catchAsync(async (req, res) => {
 // update admin
 const updateAdmin = catchAsync(async (req, res) => {
   const cloudinaryResult = req.cloudinaryResult;
-  const result = await AdminServices.updateAdminIntoDb(cloudinaryResult, req.params.id, req.body);
+  const result = await AdminServices.updateAdminIntoDb(cloudinaryResult, req.params.id, req.body, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -39,7 +39,7 @@ const updateAdmin = catchAsync(async (req, res) => {
 
 // delete admin
 const deleteAdmin = catchAsync(async (req, res) => {
-  const result = await AdminServices.deleteAdminFromDb(req.params.id);
+  const result = await AdminServices.deleteAdminFromDb(req.params.id, req!.user!.id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

@@ -3,9 +3,9 @@ import ApiError from "../../../errors/api-error";
 import prisma from "../../../shared/prisma"
 import { excludeSensitiveFields } from "../../../utils/sanitize";
 import { IAdmin } from "./admin.interface";
-import { UserRole } from "@prisma/client";
-
-// todo: fix admin service like the vendor service
+import { UserRole, UserStatus } from "@prisma/client";
+import { validateUser } from "../../../utils/validate-user";
+import { validateAuthorized } from "../../../utils/validate-authorized";
 
 // get all admins
 const getAllAdminsFromDb = async () => {
@@ -24,7 +24,7 @@ const getAllAdminsFromDb = async () => {
 
 // get single admin
 const getSingleAdminFromDb = async (id: string) => {
-  const admin = await prisma.user.findUniqueOrThrow({
+  const admin = await prisma.user.findUnique({
     where: {
       id,
       role: {
@@ -33,12 +33,15 @@ const getSingleAdminFromDb = async (id: string) => {
       isDeleted: false
     }
   });
+  if (!admin) throw new ApiError(StatusCodes.NOT_FOUND, "Admin not found!");
   return excludeSensitiveFields(admin, ["password"]);
 }
 
 // update admin
-const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IAdmin>) => {
-  const user = await prisma.user.findUniqueOrThrow({
+const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData: Partial<IAdmin>, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  if (id !== currentUser.id || currentUser.role !== UserRole.SUPER_ADMIN) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+  const user = await prisma.user.findUnique({
     where: {
       id,
       role: {
@@ -85,7 +88,9 @@ const updateAdminIntoDb = async (cloudinaryResult: any, id: string, updatedData:
 };
 
 // delete admin
-const deleteAdminFromDb = async (id: string) => {
+const deleteAdminFromDb = async (id: string, userId: string) => {
+  const currentUser = await validateUser(userId, UserStatus.ACTIVE, [UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  if (id !== currentUser.id || currentUser.role !== UserRole.SUPER_ADMIN) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
   const admin = await prisma.user.findUnique({
     where: {
       id,

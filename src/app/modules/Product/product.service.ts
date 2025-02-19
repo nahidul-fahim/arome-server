@@ -6,17 +6,23 @@ import { UserRole } from "@prisma/client";
 
 // create new product
 const createProductIntoDb = async (vendorId: string, cloudinaryResult: any, data: IProduct) => {
-  await prisma.vendor.findUniqueOrThrow({
+  const vendor = await prisma.user.findUnique({
     where: {
-      userId: vendorId,
+      id: vendorId,
+      role: UserRole.VENDOR,
       isDeleted: false
+    },
+    include: {
+      vendor: true
     }
   });
-  await prisma.category.findUniqueOrThrow({
+  if (!vendor || !vendor.vendor) throw new ApiError(StatusCodes.NOT_FOUND, "Vendor not found!");
+  const category = await prisma.category.findUnique({
     where: {
       id: data.categoryId,
     }
   });
+  if (!category) throw new ApiError(StatusCodes.NOT_FOUND, "Category not found!");
   if (vendorId) {
     data.vendorId = vendorId
   }

@@ -28,6 +28,11 @@ const createProductValidation = z.object({
       invalid_type_error: "Description must be a string",
     }),
 
+    shopId: z.string({
+      required_error: "Shop ID is required",
+      invalid_type_error: "Shop ID must be a string",
+    }),
+
     discount: z
       .number({
         invalid_type_error: "Discount must be a number",

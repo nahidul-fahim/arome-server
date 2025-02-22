@@ -122,6 +122,24 @@ const deleteVendorFromDb = async (vendorId: string, userId: string) => {
         isDeleted: true
       }
     });
+    await tx.shop.updateMany({
+      where: {
+        vendorId: vendorId,
+        isDeleted: false
+      },
+      data: {
+        isDeleted: true
+      }
+    });
+    await tx.product.updateMany({
+      where: {
+        vendorId: vendorId,
+        isDeleted: false
+      },
+      data: {
+        isDeleted: true
+      }
+    });
     const deletedInfo = excludeSensitiveFields(deletedUser, ["status", "password"]);
     return deletedInfo;
   })

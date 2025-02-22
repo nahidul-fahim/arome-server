@@ -30,19 +30,19 @@ router.post(
 );
 
 router.get(
-  "/vendor-products",
-  ProductController.getVendorAllProducts
-)
+  "/shop-products",
+  ProductController.getShopAllProducts
+);
 
 router.get(
   "/",
   ProductController.getAllProducts
-)
+);
 
 router.get(
   "/:id",
   ProductController.getSingleProduct
-)
+);
 
 router.patch(
   "/:id",
@@ -61,14 +61,14 @@ router.patch(
   },
   validateRequest(ProductValidation.updateProductValidation),
   ProductController.updateProduct
-)
+);
 
 
 router.delete(
   "/:id",
   auth(UserRole.VENDOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   ProductController.deleteProduct
-)
+);
 
 
 export const productRoutes = router;

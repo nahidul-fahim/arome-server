@@ -38,7 +38,7 @@ const getVendorShopFromDb = async (vendorId: string, userId: string) => {
     const isAuthorized = shop?.vendorId === userId || isAdmin;
     if (!isAuthorized) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
     return shop;
-}
+};
 
 const updateShopIntoDb = async (id: string, data: IShop, cloudinaryResult: any) => {
     

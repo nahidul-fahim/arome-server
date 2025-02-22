@@ -7,4 +7,7 @@ export interface IProduct {
   description: string;
   discount?: number;
   vendorId: string;
+  shopId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

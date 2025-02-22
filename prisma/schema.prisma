@@ -94,6 +94,7 @@ model Shop {
   logo        String
   description String
   vendorId    String
+  isDeleted   Boolean   @default(false)
   vendor      Vendor    @relation(fields: [vendorId], references: [userId])
   Product     Product[]
 }
@@ -108,6 +109,7 @@ model Product {
   image       String
   discount    Decimal?
   shopId      String
+  vendorId    String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   category    Category    @relation(fields: [categoryId], references: [id])
@@ -115,6 +117,7 @@ model Product {
   reviews     Review[]
   orderItems  OrderItem[]
   CartItem    CartItem[]
+  isDeleted   Boolean     @default(false)
 
   @@map("products")
 }

@@ -40,21 +40,21 @@ const getSingleProduct = catchAsync(async (req, res) => {
 });
 
 // Get all products of a vendor
-const getVendorAllProducts = catchAsync(async (req, res) => {
-  const { vendorId } = req.query;
-  if (!vendorId || typeof vendorId !== 'string') {
+const getShopAllProducts = catchAsync(async (req, res) => {
+  const { shopId } = req.query;
+  if (!shopId || typeof shopId !== 'string') {
     return sendResponse(res, {
       statusCode: StatusCodes.BAD_REQUEST,
       success: false,
-      message: "Vendor ID is required and must be a string",
+      message: "Shop ID is required and must be a string",
       data: null,
     });
   }
-  const result = await ProductServices.getVendorAllProductsFromDb(vendorId as string);
+  const result = await ProductServices.getShopAllProductsFromDb(shopId as string);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "All products for the vendor fetched successfully",
+    message: "All products for the shop fetched successfully",
     data: result,
   });
 });
@@ -91,7 +91,7 @@ export const ProductController = {
   createNewProduct,
   getAllProducts,
   getSingleProduct,
-  getVendorAllProducts,
+  getShopAllProducts,
   updateProduct,
   deleteProduct,
 };

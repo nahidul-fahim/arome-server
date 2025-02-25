@@ -4,12 +4,13 @@ import { validateUser } from "../../../utils/validate-user";
 import ApiError from "../../../errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { validateOrder } from "../../../utils/validate-order";
-import { IOrder } from "./order.interface";
+import { IOrder, IShippingDetails } from "./order.interface";
+import { validateProductInventory } from "../../../utils/validate-product-inventory";
 
 const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
   const customerId = data.customerId;
   await validateUser(customerId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
-  const cart = await prisma.cart.findUniqueOrThrow({
+  const cart = await prisma.cart.findUnique({
     where: {
       customerId,
     },
@@ -24,9 +25,18 @@ const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
 
   if (!cart || cart.cartItems.length === 0) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
-  }
+  };
 
-  const totalAmount = cart.cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  await Promise.all(
+    cart.cartItems.map(async (item) => {
+      await validateProductInventory(item.product.id, item.quantity);
+    })
+  );
+
+  const totalAmount = cart.cartItems.reduce((total, item) => {
+    const price = item.product.price.toNumber();
+    return total + price * item.quantity;
+  }, 0);
 
   const order = await prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
@@ -38,10 +48,7 @@ const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
         orderItems: {
           create: cart.cartItems.map((item) => ({
             productId: item.productId,
-            productName: item.product.name,
-            productImage: item.product.image,
             quantity: item.quantity,
-            price: item.price,
           })),
         },
         ShippingDetails: {
@@ -155,6 +162,41 @@ const getSingleOrderFromDb = async (orderId: string, userId: string) => {
   return result;
 }
 
+const updateOrderShippingDetailsIntoDb = async (
+  orderId: string,
+  userId: string,
+  data: IShippingDetails
+) => {
+  await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
+
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { customer: true, ShippingDetails: true },
+  });
+
+  if (order.customer.userId !== userId) {
+    throw new ApiError(StatusCodes.FORBIDDEN, "You are not authorized to update this order.");
+  }
+
+  if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.PAID) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      "The order is shipped already!"
+    );
+  }
+
+  const updatedShippingDetails = await prisma.shippingDetails.update({
+    where: { orderId: orderId },
+    data: {
+      ...data,
+      city: data.cityId ? { connect: { id: data.cityId } } : undefined,
+    },
+  });
+
+  return { ...order, ShippingDetails: updatedShippingDetails };
+};
+
+
 const deleteOrderFromDb = async (orderId: string, userId: string) => {
   const user = await validateUser(userId, UserStatus.ACTIVE, [UserRole.SUPER_ADMIN]);
   await validateOrder(orderId);
@@ -179,9 +221,7 @@ const deleteOrderFromDb = async (orderId: string, userId: string) => {
     return deletedOrder;
   })
   return result;
-}
-
-// todo: update order + adding shipping address to order in prisma schema
+};
 
 export const OrderServices = {
   createOrderIntoDB,
@@ -189,5 +229,6 @@ export const OrderServices = {
   getVendorAllOrdersFromDb,
   getCustomerAllPurchasesFromDb,
   getSingleOrderFromDb,
+  updateOrderShippingDetailsIntoDb,
   deleteOrderFromDb
 }

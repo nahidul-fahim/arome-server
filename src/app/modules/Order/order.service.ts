@@ -188,14 +188,15 @@ const updateOrderShippingDetailsIntoDb = async (
   const updatedShippingDetails = await prisma.shippingDetails.update({
     where: { orderId: orderId },
     data: {
-      ...data,
-      city: data.cityId ? { connect: { id: data.cityId } } : undefined,
-    },
+      address: data.address,
+      phone: data.phone,
+      email: data.email,
+      cityId: data.cityId
+    }
   });
 
   return { ...order, ShippingDetails: updatedShippingDetails };
 };
-
 
 const deleteOrderFromDb = async (orderId: string, userId: string) => {
   const user = await validateUser(userId, UserStatus.ACTIVE, [UserRole.SUPER_ADMIN]);

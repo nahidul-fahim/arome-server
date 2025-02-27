@@ -105,7 +105,7 @@ model Product {
   price       Decimal
   categoryId  String
   inventory   Int
-  description String?     @default("")
+  description String?
   image       String
   discount    Decimal?
   shopId      String
@@ -125,7 +125,7 @@ model Product {
 model Category {
   id          String    @id @unique @default(uuid())
   name        String    @unique
-  description String?   @default("")
+  description String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[]
@@ -161,7 +161,7 @@ model Order {
   id              String           @id @default(uuid())
   customerId      String
   vendorId        String
-  couponId        String?          @default("")
+  couponId        String?
   status          OrderStatus      @default(PENDING)
   totalAmount     Decimal?
   createdAt       DateTime         @default(now())
@@ -233,7 +233,7 @@ model City {
 model Coupon {
   id          String    @id @default(uuid())
   code        String    @unique
-  description String?   @default("")
+  description String?
   discount    Decimal
   isActive    Boolean   @default(true)
   expiryDate  DateTime?
@@ -249,7 +249,7 @@ model Review {
   userId    String
   productId String
   rating    Int
-  comment   String?  @default("")
+  comment   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   product   Product  @relation(fields: [productId], references: [id])

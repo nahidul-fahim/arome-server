@@ -38,6 +38,13 @@ router.get(
   OrderController.getSingleOrder
 )
 
+router.patch(
+  "/update-order/:orderId",
+  auth(UserRole.CUSTOMER),
+  validateRequest(OrderValidation.updateShippingDetailsValidation),
+  OrderController.updateShippingDetails
+)
+
 router.delete(
   "/delete-order/:orderId",
   auth(UserRole.SUPER_ADMIN),

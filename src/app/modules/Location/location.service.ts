@@ -1,3 +1,4 @@
+import { ShippingDetails } from './../../../../node_modules/.pnpm/@prisma+client@6.3.0_prisma@6.3.0_typescript@5.7.3__typescript@5.7.3/node_modules/.prisma/client/index.d';
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../../errors/api-error";
 import prisma from "../../../shared/prisma";
@@ -12,7 +13,7 @@ const getAllRegionsFromDb = async () => {
 }
 
 const getAllDistrictsFromDb = async (regionId: string) => {
-    if(!regionId) throw new ApiError(StatusCodes.BAD_REQUEST, "Region id is required!");
+    if (!regionId) throw new ApiError(StatusCodes.BAD_REQUEST, "Region id is required!");
     const result = await prisma.district.findMany({
         where: {
             regionId
@@ -25,13 +26,16 @@ const getAllDistrictsFromDb = async (regionId: string) => {
 }
 
 const getAllCitiesFromDb = async (districtId: string) => {
-    if(!districtId) throw new ApiError(StatusCodes.BAD_REQUEST, "District id is required!");
+    if (!districtId) throw new ApiError(StatusCodes.BAD_REQUEST, "District id is required!");
     const result = await prisma.city.findMany({
         where: {
             districtId
         },
         orderBy: {
             name: 'asc'
+        },
+        include: {
+            ShippingDetails: true
         }
     });
     return result;

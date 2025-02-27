@@ -22,20 +22,22 @@ const createShippingDetailsValidation = z.object({
 });
 
 const updateShippingDetailsValidation = z.object({
-  address: z.string({
-    invalid_type_error: "Address must be a string",
-  }).optional(),
-  phone: z.string({
-    invalid_type_error: "Phone number must be a string",
-  }).optional(),
-  email: z.string({
-    invalid_type_error: "Email must be a string",
-  }).email({
-    message: "Invalid email address",
-  }).optional(),
-  cityId: z.string({
-    invalid_type_error: "City ID must be a string",
-  }).optional()
+  body: z.object({
+    address: z.string({
+      invalid_type_error: "Address must be a string",
+    }).optional(),
+    phone: z.string({
+      invalid_type_error: "Phone number must be a string",
+    }).optional(),
+    email: z.string({
+      invalid_type_error: "Email must be a string",
+    }).email({
+      message: "Invalid email address",
+    }).optional(),
+    cityId: z.string({
+      invalid_type_error: "City ID must be a string",
+    }).optional()
+  })
 });
 
 const createOrderValidation = z.object({
@@ -51,17 +53,7 @@ const createOrderValidation = z.object({
   }),
 });
 
-// Update Order Validation
-const updateOrderValidation = z.object({
-  body: z.object({
-    customerId: z.string({
-      invalid_type_error: "Customer ID must be a string",
-    }),
-  }),
-});
-
-
 export const OrderValidation = {
   createOrderValidation,
-  updateOrderValidation,
+  updateShippingDetailsValidation,
 };

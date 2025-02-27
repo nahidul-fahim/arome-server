@@ -27,6 +27,13 @@ const createOrderIntoDB = async (data: IOrder, paymentDetails: any) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Cart is empty!");
   };
 
+  const isValidCity = await prisma.city.findUnique({
+    where: {
+      id: data.shippingDetails.cityId
+    }
+  })
+  if (!isValidCity) throw new ApiError(StatusCodes.NOT_FOUND, "Please select a valid city.");
+
   await Promise.all(
     cart.cartItems.map(async (item) => {
       await validateProductInventory(item.product.id, item.quantity);
@@ -169,20 +176,36 @@ const updateOrderShippingDetailsIntoDb = async (
 ) => {
   await validateUser(userId, UserStatus.ACTIVE, [UserRole.CUSTOMER]);
 
-  const order = await prisma.order.findUniqueOrThrow({
+  const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { customer: true, ShippingDetails: true },
   });
 
+  if (!order) throw new ApiError(StatusCodes.NOT_FOUND, "Order not found.");
   if (order.customer.userId !== userId) {
     throw new ApiError(StatusCodes.FORBIDDEN, "You are not authorized to update this order.");
   }
-
   if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.PAID) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      "The order is shipped already!"
-    );
+    throw new ApiError(StatusCodes.BAD_REQUEST, "The order is shipped already!");
+  }
+
+  if (data.cityId) {
+    const isValidCity = await prisma.city.findUnique({
+      where: { id: data.cityId }
+    });
+    if (!isValidCity) throw new ApiError(StatusCodes.NOT_FOUND, "Please select a valid city.");
+  }
+
+  const existingShippingDetails = order.ShippingDetails;
+  const isSameData = (
+    data.address === existingShippingDetails!.address &&
+    data.phone === existingShippingDetails!.phone &&
+    data.email === existingShippingDetails!.email &&
+    data.cityId === existingShippingDetails!.cityId
+  );
+
+  if (isSameData) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "No changes detected. Nothing was updated.");
   }
 
   const updatedShippingDetails = await prisma.shippingDetails.update({
@@ -197,6 +220,7 @@ const updateOrderShippingDetailsIntoDb = async (
 
   return { ...order, ShippingDetails: updatedShippingDetails };
 };
+
 
 const deleteOrderFromDb = async (orderId: string, userId: string) => {
   const user = await validateUser(userId, UserStatus.ACTIVE, [UserRole.SUPER_ADMIN]);

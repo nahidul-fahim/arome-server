@@ -6,6 +6,7 @@ const excludeSensitiveFields = (data, fieldsToExclude) => {
     fieldsToExclude.forEach((field) => {
         delete sanitizedData[field];
     });
+    Object.keys(sanitizedData);
     return sanitizedData;
 };
 exports.excludeSensitiveFields = excludeSensitiveFields;

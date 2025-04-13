@@ -12,55 +12,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VendorController = void 0;
+exports.LocationController = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const catch_async_1 = __importDefault(require("../../../shared/catch-async"));
 const send_response_1 = __importDefault(require("../../../shared/send-response"));
-const vendor_service_1 = require("./vendor.service");
-// get all vendors
-const getAllVendors = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield vendor_service_1.VendorServices.getAllVendorsFromDb();
+const location_service_1 = require("./location.service");
+const getAllRegions = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield location_service_1.LocationServices.getAllRegionsFromDb();
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "Vendors fetched successfully!",
+        message: "Regions fetched successfully!",
         data: result
     });
 }));
-// get single vendor
-const singleVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield vendor_service_1.VendorServices.getSingleVendorFromDb(req.params.id, req.user.id);
+const getAllDistricts = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { regionId } = req.query;
+    const result = yield location_service_1.LocationServices.getAllDistrictsFromDb(regionId);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "Vendor fetched successfully!",
+        message: "Districts fetched successfully!",
         data: result
     });
 }));
-// update vendor
-const updateVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const cloudinaryResult = req.cloudinaryResult;
-    const result = yield vendor_service_1.VendorServices.updateVendorIntoDb(cloudinaryResult, req.params.id, req.body, req.user.id);
+const getAllCities = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { districtId } = req.query;
+    const result = yield location_service_1.LocationServices.getAllCitiesFromDb(districtId);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "Vendor updated successfully!",
+        message: "Cities fetched successfully!",
         data: result
     });
 }));
-// delete vendor
-const deleteVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield vendor_service_1.VendorServices.deleteVendorFromDb(req.params.id, req.user.id);
-    (0, send_response_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
-        success: true,
-        message: "Vendor deleted successfully!",
-        data: result
-    });
-}));
-exports.VendorController = {
-    getAllVendors,
-    singleVendor,
-    updateVendor,
-    deleteVendor
+exports.LocationController = {
+    getAllRegions,
+    getAllDistricts,
+    getAllCities
 };

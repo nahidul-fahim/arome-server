@@ -29,7 +29,7 @@ const getAllCustomers = (0, catch_async_1.default)((req, res) => __awaiter(void 
 }));
 // get single customer
 const singleCustomer = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield customer_service_1.CustomerServices.getSingleCustomerFromDb(req.params.id);
+    const result = yield customer_service_1.CustomerServices.getSingleCustomerFromDb(req.params.id, req.user.id);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -40,7 +40,7 @@ const singleCustomer = (0, catch_async_1.default)((req, res) => __awaiter(void 0
 // update customer
 const updateCustomer = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const cloudinaryResult = req.cloudinaryResult;
-    const result = yield customer_service_1.CustomerServices.updateCustomerIntoDb(cloudinaryResult, req.params.id, req.body);
+    const result = yield customer_service_1.CustomerServices.updateCustomerIntoDb(cloudinaryResult, req.params.id, req.body, req.user.id);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -50,7 +50,7 @@ const updateCustomer = (0, catch_async_1.default)((req, res) => __awaiter(void 0
 }));
 // delete customer
 const deleteCustomer = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield customer_service_1.CustomerServices.deleteCustomerFromDb(req.params.id);
+    const result = yield customer_service_1.CustomerServices.deleteCustomerFromDb(req.params.id, req.user.id);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,

@@ -51,21 +51,21 @@ const getSingleProduct = (0, catch_async_1.default)((req, res) => __awaiter(void
     });
 }));
 // Get all products of a vendor
-const getVendorAllProducts = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { vendorId } = req.query;
-    if (!vendorId || typeof vendorId !== 'string') {
+const getShopAllProducts = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { shopId } = req.query;
+    if (!shopId || typeof shopId !== 'string') {
         return (0, send_response_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.BAD_REQUEST,
             success: false,
-            message: "Vendor ID is required and must be a string",
+            message: "Shop ID is required and must be a string",
             data: null,
         });
     }
-    const result = yield product_service_1.ProductServices.getVendorAllProductsFromDb(vendorId);
+    const result = yield product_service_1.ProductServices.getShopAllProductsFromDb(shopId);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "All products for the vendor fetched successfully",
+        message: "All products for the shop fetched successfully",
         data: result,
     });
 }));
@@ -84,8 +84,9 @@ const updateProduct = (0, catch_async_1.default)((req, res) => __awaiter(void 0,
 }));
 // Delete a product by id
 const deleteProduct = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.params;
-    yield product_service_1.ProductServices.deleteProductFromDb(id);
+    const { id: productId } = req.params;
+    const userId = req.user.id;
+    yield product_service_1.ProductServices.deleteProductFromDb(productId, userId);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -97,7 +98,7 @@ exports.ProductController = {
     createNewProduct,
     getAllProducts,
     getSingleProduct,
-    getVendorAllProducts,
+    getShopAllProducts,
     updateProduct,
     deleteProduct,
 };

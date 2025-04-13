@@ -12,42 +12,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthController = void 0;
+exports.ShopController = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const catch_async_1 = __importDefault(require("../../../shared/catch-async"));
 const send_response_1 = __importDefault(require("../../../shared/send-response"));
-const auth_service_1 = require("./auth.service");
-// login user
-const loginUser = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield auth_service_1.AuthServices.loginUserIntoDb(req.body);
-    const { refreshToken } = result;
-    res.cookie('refreshToken', refreshToken, {
-        secure: false,
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000
-    });
+const shop_service_1 = require("./shop.service");
+const createNewShop = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const cloudinaryResult = req.cloudinaryResult;
+    const result = yield shop_service_1.ShopServices.createNewShopIntoDb(req === null || req === void 0 ? void 0 : req.body, cloudinaryResult);
     (0, send_response_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+        statusCode: http_status_codes_1.StatusCodes.CREATED,
         success: true,
-        message: "Logged in successfully!",
-        data: {
-            accessToken: result.accessToken,
-            result: result.user
-        }
-    });
-}));
-// refresh token
-const refreshToken = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { refreshToken } = req.cookies;
-    const result = yield auth_service_1.AuthServices.refreshToken(refreshToken);
-    (0, send_response_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
-        success: true,
-        message: "Access token generated successfully!",
+        message: "Shop created successfully!",
         data: result
     });
 }));
-exports.AuthController = {
-    loginUser,
-    refreshToken
+exports.ShopController = {
+    createNewShop
 };

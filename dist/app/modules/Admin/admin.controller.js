@@ -40,7 +40,7 @@ const singleAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0, v
 // update admin
 const updateAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const cloudinaryResult = req.cloudinaryResult;
-    const result = yield admin_service_1.AdminServices.updateAdminIntoDb(cloudinaryResult, req.params.id, req.body);
+    const result = yield admin_service_1.AdminServices.updateAdminIntoDb(cloudinaryResult, req.params.id, req.body, req.user.id);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -50,7 +50,7 @@ const updateAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0, v
 }));
 // delete admin
 const deleteAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield admin_service_1.AdminServices.deleteAdminFromDb(req.params.id);
+    const result = yield admin_service_1.AdminServices.deleteAdminFromDb(req.params.id, req.user.id);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -58,9 +58,20 @@ const deleteAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0, v
         data: result
     });
 }));
+// blacklist vendor
+const vendorStatusUpdate = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield admin_service_1.AdminServices.vendorStatusUpdateIntoDb(req.params.id, req.body, req.user.id);
+    (0, send_response_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: "Blacklisted vendor successfully!",
+        data: result
+    });
+}));
 exports.AdminController = {
     getAllAdmins,
     singleAdmin,
     updateAdmin,
-    deleteAdmin
+    deleteAdmin,
+    vendorStatusUpdate
 };

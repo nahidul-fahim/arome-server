@@ -26,10 +26,10 @@ router.post("/", (0, auth_1.default)(client_1.UserRole.VENDOR, client_1.UserRole
         next(new api_error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid JSON data in req.body.data"));
     }
 }, (0, validate_request_1.default)(product_validation_1.ProductValidation.createProductValidation), product_controller_1.ProductController.createNewProduct);
-router.get("/vendor-products", product_controller_1.ProductController.getVendorAllProducts);
+router.get("/shop-products", product_controller_1.ProductController.getShopAllProducts);
 router.get("/", product_controller_1.ProductController.getAllProducts);
 router.get("/:id", product_controller_1.ProductController.getSingleProduct);
-router.patch("/:id", (0, auth_1.default)(client_1.UserRole.VENDOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), send_image_to_cloudinary_1.upload.single("file"), send_image_to_cloudinary_1.sendImageToCloudinary, (req, res, next) => {
+router.patch("/:id", (0, auth_1.default)(client_1.UserRole.VENDOR), send_image_to_cloudinary_1.upload.single("file"), send_image_to_cloudinary_1.sendImageToCloudinary, (req, res, next) => {
     var _a;
     try {
         if ((_a = req.body) === null || _a === void 0 ? void 0 : _a.data) {
@@ -40,6 +40,6 @@ router.patch("/:id", (0, auth_1.default)(client_1.UserRole.VENDOR, client_1.User
     catch (error) {
         next(new api_error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid JSON data in req.body.data"));
     }
-}, (0, validate_request_1.default)(product_validation_1.ProductValidation.updateProductValidation), product_controller_1.ProductController.createNewProduct);
+}, (0, validate_request_1.default)(product_validation_1.ProductValidation.updateProductValidation), product_controller_1.ProductController.updateProduct);
 router.delete("/:id", (0, auth_1.default)(client_1.UserRole.VENDOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), product_controller_1.ProductController.deleteProduct);
 exports.productRoutes = router;

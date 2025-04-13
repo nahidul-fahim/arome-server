@@ -14,11 +14,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./config"));
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
+let server;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        const server = app_1.default.listen(config_1.default.port, () => {
+        server = app_1.default.listen(config_1.default.port, () => {
             console.log(`Arome server is running on port ${config_1.default.port}`);
         });
     });
 }
+// Graceful shutdown handling
+process.on("SIGINT", () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Shutting down server...");
+    yield prisma.$disconnect(); // Disconnect Prisma Client
+    server.close(() => {
+        console.log("Server closed.");
+        process.exit(0);
+    });
+}));
+process.on("SIGTERM", () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Shutting down server...");
+    yield prisma.$disconnect();
+    server.close(() => {
+        console.log("Server closed.");
+        process.exit(0);
+    });
+}));
 main();

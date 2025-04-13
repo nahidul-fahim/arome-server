@@ -25,6 +25,10 @@ const createProductValidation = zod_1.z.object({
             required_error: "Description is required",
             invalid_type_error: "Description must be a string",
         }),
+        shopId: zod_1.z.string({
+            required_error: "Shop ID is required",
+            invalid_type_error: "Shop ID must be a string",
+        }),
         discount: zod_1.z
             .number({
             invalid_type_error: "Discount must be a number",

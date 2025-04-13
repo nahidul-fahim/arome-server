@@ -18,75 +18,135 @@ const api_error_1 = __importDefault(require("../../../errors/api-error"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const client_1 = require("@prisma/client");
 const sanitize_1 = require("../../../utils/sanitize");
-// get all vendors
+const validate_user_1 = require("../../../utils/validate-user");
+const validate_authorized_1 = require("../../../utils/validate-authorized");
 const getAllVendorsFromDb = () => __awaiter(void 0, void 0, void 0, function* () {
-    const allVendors = yield prisma_1.default.vendor.findMany({
+    const allVendors = yield prisma_1.default.user.findMany({
         where: {
-            isDeleted: false
-        }
-    });
-    return allVendors;
-});
-// get single vendor
-const getSingleVendorFromDb = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendor = yield prisma_1.default.vendor.findUniqueOrThrow({
-        where: {
-            id,
-            isDeleted: false
-        }
-    });
-    return vendor;
-});
-// update vendor
-const updateVendorIntoDb = (cloudinaryResult, id, updatedData) => __awaiter(void 0, void 0, void 0, function* () {
-    const currentVendor = yield prisma_1.default.vendor.findUniqueOrThrow({
-        where: {
-            id,
-            isDeleted: false
-        }
-    });
-    if (!currentVendor) {
-        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Vendor not found!");
-    }
-    if (cloudinaryResult && cloudinaryResult.secure_url) {
-        updatedData.logo = cloudinaryResult.secure_url;
-    }
-    const result = yield prisma_1.default.vendor.update({
-        where: {
-            id,
+            role: client_1.UserRole.VENDOR,
             isDeleted: false
         },
-        data: updatedData
-    });
-    return result;
-});
-// delete vendor
-const deleteVendorFromDb = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const vendor = yield prisma_1.default.vendor.findUnique({
-        where: {
-            id,
-            isDeleted: false
+        include: {
+            vendor: true
         }
     });
-    if (!vendor) {
-        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Vendor not found!");
+    return allVendors.map((vendor) => {
+        return (0, sanitize_1.excludeSensitiveFields)(vendor, ["password"]);
+    });
+});
+// get single vendor
+const getSingleVendorFromDb = (vendorId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield (0, validate_user_1.validateUser)(userId, client_1.UserStatus.ACTIVE, [client_1.UserRole.VENDOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN]);
+    yield (0, validate_authorized_1.validateAuthorized)(vendorId, currentUser.role, currentUser.id);
+    const result = yield prisma_1.default.user.findUnique({
+        where: {
+            id: vendorId,
+            role: client_1.UserRole.VENDOR,
+            isDeleted: false
+        },
+        include: {
+            vendor: true
+        }
+    });
+    if (!result)
+        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found!");
+    return (0, sanitize_1.excludeSensitiveFields)(result, ["password"]);
+});
+// update vendor
+const updateVendorIntoDb = (cloudinaryResult, vendorId, updatedData, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield (0, validate_user_1.validateUser)(userId, client_1.UserStatus.ACTIVE, [client_1.UserRole.VENDOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN]);
+    yield (0, validate_authorized_1.validateAuthorized)(vendorId, currentUser.role, currentUser.id);
+    const user = yield prisma_1.default.user.findUnique({
+        where: {
+            id: vendorId,
+            role: client_1.UserRole.VENDOR,
+            isDeleted: false
+        },
+        include: {
+            vendor: true
+        }
+    });
+    if (!user || !user.vendor) {
+        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found!");
+    }
+    const vendorUpdateData = Object.assign({}, updatedData);
+    if (cloudinaryResult && cloudinaryResult.secure_url) {
+        vendorUpdateData.profilePhoto = cloudinaryResult.secure_url;
+    }
+    ;
+    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const updatedUser = yield tx.user.update({
+            where: {
+                id: vendorId,
+                role: client_1.UserRole.VENDOR,
+                isDeleted: false
+            },
+            data: {
+                name: vendorUpdateData === null || vendorUpdateData === void 0 ? void 0 : vendorUpdateData.name,
+            }
+        });
+        const updatedVendor = yield tx.vendor.update({
+            where: {
+                userId: vendorId,
+                isDeleted: false
+            },
+            data: Object.assign({}, vendorUpdateData)
+        });
+        return Object.assign(Object.assign({}, updatedUser), { vendor: updatedVendor });
+    }));
+    return (0, sanitize_1.excludeSensitiveFields)(result, ["password"]);
+});
+// delete vendor
+const deleteVendorFromDb = (vendorId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield (0, validate_user_1.validateUser)(userId, client_1.UserStatus.ACTIVE, [client_1.UserRole.VENDOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN]);
+    yield (0, validate_authorized_1.validateAuthorized)(vendorId, currentUser.role, currentUser.id);
+    const user = yield prisma_1.default.user.findUnique({
+        where: {
+            id: vendorId,
+            role: client_1.UserRole.VENDOR,
+            isDeleted: false
+        },
+        include: {
+            vendor: true
+        }
+    });
+    if (!user || !user.vendor) {
+        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found!");
     }
     const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const deletedVendor = yield tx.vendor.update({
+        const deletedUser = yield tx.user.update({
             where: {
-                id,
+                id: vendorId,
+            },
+            data: {
+                isDeleted: true
+            }
+        });
+        yield tx.vendor.update({
+            where: {
+                userId: vendorId,
                 isDeleted: false
             },
             data: {
                 isDeleted: true
             }
         });
-        const deletedUser = yield tx.user.update({
+        yield tx.shop.updateMany({
             where: {
-                email: deletedVendor.email
+                vendorId: vendorId,
+                isDeleted: false
             },
             data: {
-                status: client_1.UserStatus.SUSPENDED
+                isDeleted: true
+            }
+        });
+        yield tx.product.updateMany({
+            where: {
+                vendorId: vendorId,
+                isDeleted: false
+            },
+            data: {
+                isDeleted: true
             }
         });
         const deletedInfo = (0, sanitize_1.excludeSensitiveFields)(deletedUser, ["status", "password"]);

@@ -12,55 +12,56 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VendorController = void 0;
+exports.CartController = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const catch_async_1 = __importDefault(require("../../../shared/catch-async"));
 const send_response_1 = __importDefault(require("../../../shared/send-response"));
-const vendor_service_1 = require("./vendor.service");
-// get all vendors
-const getAllVendors = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield vendor_service_1.VendorServices.getAllVendorsFromDb();
+const cart_service_1 = require("./cart.service");
+const createCart = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield cart_service_1.CartServices.createCartIntoDB(req === null || req === void 0 ? void 0 : req.body);
     (0, send_response_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+        statusCode: http_status_codes_1.StatusCodes.CREATED,
         success: true,
-        message: "Vendors fetched successfully!",
+        message: "Cart added successfully!",
         data: result
     });
 }));
-// get single vendor
-const singleVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield vendor_service_1.VendorServices.getSingleVendorFromDb(req.params.id, req.user.id);
+const getSingleCart = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const { cartId } = req.params;
+    const result = yield cart_service_1.CartServices.getSingleCartFromDB(cartId, userId);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "Vendor fetched successfully!",
+        message: "Cart fetched successfully!",
         data: result
     });
 }));
-// update vendor
-const updateVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const cloudinaryResult = req.cloudinaryResult;
-    const result = yield vendor_service_1.VendorServices.updateVendorIntoDb(cloudinaryResult, req.params.id, req.body, req.user.id);
+const updateCart = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { cartId } = req.params;
+    const userId = req.user.id;
+    const result = yield cart_service_1.CartServices.updateCartIntoDB(cartId, userId, req.body);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "Vendor updated successfully!",
+        message: "Cart updated successfully!",
         data: result
     });
 }));
-// delete vendor
-const deleteVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield vendor_service_1.VendorServices.deleteVendorFromDb(req.params.id, req.user.id);
+const deleteCart = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { cartId } = req.params;
+    const userId = req.user.id;
+    const result = yield cart_service_1.CartServices.deleteCartFromDB(cartId, userId);
     (0, send_response_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
-        message: "Vendor deleted successfully!",
+        message: "Cart deleted successfully!",
         data: result
     });
 }));
-exports.VendorController = {
-    getAllVendors,
-    singleVendor,
-    updateVendor,
-    deleteVendor
+exports.CartController = {
+    createCart,
+    getSingleCart,
+    updateCart,
+    deleteCart
 };

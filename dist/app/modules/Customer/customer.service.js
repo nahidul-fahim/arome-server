@@ -18,75 +18,116 @@ const api_error_1 = __importDefault(require("../../../errors/api-error"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const client_1 = require("@prisma/client");
 const sanitize_1 = require("../../../utils/sanitize");
+const validate_user_1 = require("../../../utils/validate-user");
+const validate_authorized_1 = require("../../../utils/validate-authorized");
 // get all customers
 const getAllCustomersFromDb = () => __awaiter(void 0, void 0, void 0, function* () {
-    const allCustomers = yield prisma_1.default.customer.findMany({
+    const allCustomers = yield prisma_1.default.user.findMany({
         where: {
-            isDeleted: false
-        }
-    });
-    return allCustomers;
-});
-// get single customer
-const getSingleCustomerFromDb = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const customer = yield prisma_1.default.customer.findUniqueOrThrow({
-        where: {
-            id,
-            isDeleted: false
-        }
-    });
-    return customer;
-});
-// update customer
-const updateCustomerIntoDb = (cloudinaryResult, id, updatedData) => __awaiter(void 0, void 0, void 0, function* () {
-    const currentCustomer = yield prisma_1.default.customer.findUniqueOrThrow({
-        where: {
-            id,
-            isDeleted: false
-        }
-    });
-    if (!currentCustomer) {
-        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Customer not found!");
-    }
-    if (cloudinaryResult && cloudinaryResult.secure_url) {
-        updatedData.profilePhoto = cloudinaryResult.secure_url;
-    }
-    const result = yield prisma_1.default.customer.update({
-        where: {
-            id,
+            role: client_1.UserRole.CUSTOMER,
             isDeleted: false
         },
-        data: updatedData
+        include: {
+            customer: true
+        },
     });
-    return result;
+    return allCustomers.map((customer) => {
+        return (0, sanitize_1.excludeSensitiveFields)(customer, ["password"]);
+    });
 });
-// delete customer
-const deleteCustomerFromDb = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const customer = yield prisma_1.default.customer.findUnique({
+// get single customer
+const getSingleCustomerFromDb = (customerId, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield (0, validate_user_1.validateUser)(userId, client_1.UserStatus.ACTIVE, [client_1.UserRole.CUSTOMER, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN]);
+    yield (0, validate_authorized_1.validateAuthorized)(customerId, currentUser.role, currentUser.id);
+    const result = yield prisma_1.default.user.findUnique({
         where: {
-            id,
+            id: customerId,
+            role: client_1.UserRole.CUSTOMER,
             isDeleted: false
+        },
+        include: {
+            customer: true
         }
     });
-    if (!customer) {
-        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Customer not found!");
+    if (!result)
+        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found!");
+    return (0, sanitize_1.excludeSensitiveFields)(result, ["password"]);
+});
+// update customer
+const updateCustomerIntoDb = (cloudinaryResult, id, updatedData, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield (0, validate_user_1.validateUser)(userId, client_1.UserStatus.ACTIVE, [client_1.UserRole.CUSTOMER, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN]);
+    yield (0, validate_authorized_1.validateAuthorized)(id, currentUser.role, currentUser.id);
+    const user = yield prisma_1.default.user.findUnique({
+        where: {
+            id,
+            role: client_1.UserRole.CUSTOMER,
+            isDeleted: false
+        },
+        include: {
+            customer: true
+        }
+    });
+    if (!user || !user.customer) {
+        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found!");
+    }
+    const customerUpdateData = Object.assign({}, updatedData);
+    if (cloudinaryResult && cloudinaryResult.secure_url) {
+        customerUpdateData.profilePhoto = cloudinaryResult.secure_url;
+    }
+    ;
+    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const updatedUser = yield tx.user.update({
+            where: {
+                id
+            },
+            data: {
+                name: customerUpdateData === null || customerUpdateData === void 0 ? void 0 : customerUpdateData.name,
+            }
+        });
+        const updatedCustomer = yield tx.customer.update({
+            where: {
+                userId: id,
+                isDeleted: false
+            },
+            data: Object.assign({}, customerUpdateData)
+        });
+        return Object.assign(Object.assign({}, updatedUser), { customer: updatedCustomer });
+    }));
+    return (0, sanitize_1.excludeSensitiveFields)(result, ["password"]);
+});
+// delete customer
+const deleteCustomerFromDb = (id, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const currentUser = yield (0, validate_user_1.validateUser)(userId, client_1.UserStatus.ACTIVE, [client_1.UserRole.CUSTOMER, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN]);
+    yield (0, validate_authorized_1.validateAuthorized)(id, currentUser.role, currentUser.id);
+    const user = yield prisma_1.default.user.findUnique({
+        where: {
+            id,
+            role: client_1.UserRole.CUSTOMER,
+            isDeleted: false
+        },
+        include: {
+            customer: true
+        }
+    });
+    if (!user || !user.customer) {
+        throw new api_error_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found!");
     }
     const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const deletedCustomer = yield tx.customer.update({
+        const deletedUser = yield tx.user.update({
             where: {
-                id,
-                isDeleted: false
+                id
             },
             data: {
                 isDeleted: true
             }
         });
-        const deletedUser = yield tx.user.update({
+        yield tx.customer.update({
             where: {
-                email: deletedCustomer.email
+                userId: id,
+                isDeleted: false
             },
             data: {
-                status: client_1.UserStatus.SUSPENDED
+                isDeleted: true
             }
         });
         const deletedInfo = (0, sanitize_1.excludeSensitiveFields)(deletedUser, ["status", "password"]);

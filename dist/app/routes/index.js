@@ -11,6 +11,10 @@ const customer_route_1 = require("../modules/Customer/customer.route");
 const admin_route_1 = require("../modules/Admin/admin.route");
 const category_route_1 = require("../modules/Category/category.route");
 const product_route_1 = require("../modules/Product/product.route");
+const order_route_1 = require("../modules/Order/order.route");
+const cart_route_1 = require("../modules/Cart/cart.route");
+const location_route_1 = require("../modules/Location/location.route");
+const shope_route_1 = require("../modules/Shop/shope.route");
 const router = express_1.default.Router();
 const moduleRoutes = [
     {
@@ -40,6 +44,22 @@ const moduleRoutes = [
     {
         path: "/product",
         route: product_route_1.productRoutes
+    },
+    {
+        path: "/cart",
+        route: cart_route_1.cartRoutes
+    },
+    {
+        path: "/order",
+        route: order_route_1.orderRoutes
+    },
+    {
+        path: "/location",
+        route: location_route_1.locationRoutes
+    },
+    {
+        path: "/shop",
+        route: shope_route_1.shopRoutes
     },
 ];
 moduleRoutes.forEach(route => {

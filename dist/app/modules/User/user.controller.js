@@ -20,7 +20,7 @@ const user_service_1 = require("./user.service");
 // create new admin
 const createNewAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_service_1.UserService.createNewAdminIntoDb(req.body);
-    const { refreshToken } = result;
+    const { refreshToken, accessToken, result: user } = result;
     res.cookie('refreshToken', refreshToken, {
         secure: false,
         httpOnly: true,
@@ -31,15 +31,15 @@ const createNewAdmin = (0, catch_async_1.default)((req, res) => __awaiter(void 0
         success: true,
         message: "Admin created successfully!",
         data: {
-            accessToken: result.accessToken,
-            result: result.newAdmin
+            accessToken: accessToken,
+            result: user
         }
     });
 }));
 // create new customer
 const createNewCustomer = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_service_1.UserService.createNewCustomerIntoDb(req.body);
-    const { refreshToken } = result;
+    const { refreshToken, accessToken, result: user } = result;
     res.cookie('refreshToken', refreshToken, {
         secure: false,
         httpOnly: true,
@@ -50,15 +50,15 @@ const createNewCustomer = (0, catch_async_1.default)((req, res) => __awaiter(voi
         success: true,
         message: "Customer created successfully!",
         data: {
-            accessToken: result.accessToken,
-            result: result.newCustomer
+            accessToken: accessToken,
+            result: user
         }
     });
 }));
 // create new vendor
 const createNewVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_service_1.UserService.createNewVendorIntoDb(req.body);
-    const { refreshToken } = result;
+    const { refreshToken, accessToken, result: user } = result;
     res.cookie('refreshToken', refreshToken, {
         secure: false,
         httpOnly: true,
@@ -69,8 +69,8 @@ const createNewVendor = (0, catch_async_1.default)((req, res) => __awaiter(void 
         success: true,
         message: "Vendor created successfully!",
         data: {
-            accessToken: result.accessToken,
-            result: result.newVendor
+            accessToken: accessToken,
+            result: user
         }
     });
 }));

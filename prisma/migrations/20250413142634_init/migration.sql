@@ -51,17 +51,27 @@ CREATE TABLE "admins" (
 -- CreateTable
 CREATE TABLE "vendors" (
     "id" TEXT NOT NULL,
-    "shopName" TEXT NOT NULL,
-    "slug" TEXT,
+    "name" TEXT NOT NULL,
     "isBlacklisted" BOOLEAN NOT NULL DEFAULT false,
     "userId" TEXT NOT NULL,
-    "logo" TEXT,
-    "description" TEXT DEFAULT '',
+    "profilePhoto" TEXT,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "vendors_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Shop" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "logo" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "vendorId" TEXT NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "Shop_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -71,12 +81,14 @@ CREATE TABLE "products" (
     "price" DECIMAL(65,30) NOT NULL,
     "categoryId" TEXT NOT NULL,
     "inventory" INTEGER NOT NULL,
-    "description" TEXT DEFAULT '',
+    "description" TEXT,
     "image" TEXT NOT NULL,
     "discount" DECIMAL(65,30),
+    "shopId" TEXT NOT NULL,
     "vendorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
@@ -85,7 +97,7 @@ CREATE TABLE "products" (
 CREATE TABLE "categories" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT DEFAULT '',
+    "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -119,7 +131,7 @@ CREATE TABLE "orders" (
     "id" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "vendorId" TEXT NOT NULL,
-    "couponId" TEXT DEFAULT '',
+    "couponId" TEXT,
     "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
     "totalAmount" DECIMAL(65,30),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -182,7 +194,7 @@ CREATE TABLE "cities" (
 CREATE TABLE "coupons" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
-    "description" TEXT DEFAULT '',
+    "description" TEXT,
     "discount" DECIMAL(65,30) NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "expiryDate" TIMESTAMP(3),
@@ -198,7 +210,7 @@ CREATE TABLE "reviews" (
     "userId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "rating" INTEGER NOT NULL,
-    "comment" TEXT DEFAULT '',
+    "comment" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -242,6 +254,9 @@ CREATE UNIQUE INDEX "vendors_id_key" ON "vendors"("id");
 CREATE UNIQUE INDEX "vendors_userId_key" ON "vendors"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Shop_id_key" ON "Shop"("id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "products_id_key" ON "products"("id");
 
 -- CreateIndex
@@ -281,13 +296,16 @@ ALTER TABLE "admins" ADD CONSTRAINT "admins_userId_fkey" FOREIGN KEY ("userId") 
 ALTER TABLE "vendors" ADD CONSTRAINT "vendors_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "products" ADD CONSTRAINT "products_vendorId_fkey" FOREIGN KEY ("vendorId") REFERENCES "vendors"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Shop" ADD CONSTRAINT "Shop_vendorId_fkey" FOREIGN KEY ("vendorId") REFERENCES "vendors"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "products" ADD CONSTRAINT "products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "carts" ADD CONSTRAINT "carts_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "products_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "carts" ADD CONSTRAINT "carts_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "customers"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "carts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

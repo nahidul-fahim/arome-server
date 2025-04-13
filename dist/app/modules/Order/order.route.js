@@ -1,1 +1,21 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.orderRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const auth_1 = __importDefault(require("../../../middlewares/auth"));
+const client_1 = require("@prisma/client");
+const validate_request_1 = __importDefault(require("../../../middlewares/validate-request"));
+const order_validation_1 = require("./order.validation");
+const order_controller_1 = require("./order.controller");
+const router = express_1.default.Router();
+router.post("/create-order", (0, auth_1.default)(client_1.UserRole.CUSTOMER), (0, validate_request_1.default)(order_validation_1.OrderValidation.createOrderValidation), order_controller_1.OrderController.createNewOrder);
+router.get("/all-orders", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), order_controller_1.OrderController.getAllOrders);
+router.get("/vendor-orders/:vendorId", (0, auth_1.default)(client_1.UserRole.VENDOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), order_controller_1.OrderController.getVendorAllOrders);
+router.get("/customer-purchases/:customerId", (0, auth_1.default)(client_1.UserRole.CUSTOMER, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), order_controller_1.OrderController.getCustomerAllPurchases);
+router.get("/order-details/:orderId", (0, auth_1.default)(client_1.UserRole.CUSTOMER, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), order_controller_1.OrderController.getSingleOrder);
+router.patch("/update-order/:orderId", (0, auth_1.default)(client_1.UserRole.CUSTOMER), (0, validate_request_1.default)(order_validation_1.OrderValidation.updateShippingDetailsValidation), order_controller_1.OrderController.updateShippingDetails);
+router.delete("/delete-order/:orderId", (0, auth_1.default)(client_1.UserRole.SUPER_ADMIN), order_controller_1.OrderController.deleteOrder);
+exports.orderRoutes = router;

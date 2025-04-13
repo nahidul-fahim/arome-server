@@ -18,24 +18,26 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const client_1 = require("@prisma/client");
 const jwt_helpers_1 = require("../../../helpers/jwt-helpers");
 const config_1 = __importDefault(require("../../../config"));
+const sanitize_1 = require("../../../utils/sanitize");
 // create admin
 const createNewAdminIntoDb = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
     const newAdmin = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tx.user.create({
+        const newUser = yield tx.user.create({
             data: {
+                name: data.name,
                 email: data.email,
                 password: hashedPassword,
                 role: client_1.UserRole.ADMIN,
             }
         });
-        const admin = yield tx.admin.create({
+        yield tx.admin.create({
             data: {
                 name: data.name,
-                email: data.email,
+                userId: newUser.id
             }
         });
-        return admin;
+        return newUser;
     }));
     const accessToken = jwt_helpers_1.jwtHelpers.generateToken({
         id: newAdmin.id,
@@ -47,30 +49,32 @@ const createNewAdminIntoDb = (data) => __awaiter(void 0, void 0, void 0, functio
         email: newAdmin.email,
         role: client_1.UserRole.ADMIN,
     }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
+    const result = (0, sanitize_1.excludeSensitiveFields)(newAdmin, ["password"]);
     return {
         accessToken,
         refreshToken,
-        newAdmin
+        result
     };
 });
 // create new customer
 const createNewCustomerIntoDb = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
     const newCustomer = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tx.user.create({
+        const newUser = yield tx.user.create({
             data: {
+                name: data.name,
                 email: data.email,
                 password: hashedPassword,
                 role: client_1.UserRole.CUSTOMER,
             }
         });
-        const customer = yield tx.customer.create({
+        yield tx.customer.create({
             data: {
                 name: data.name,
-                email: data.email,
+                userId: newUser.id
             }
         });
-        return customer;
+        return newUser;
     }));
     const accessToken = jwt_helpers_1.jwtHelpers.generateToken({
         id: newCustomer.id,
@@ -82,32 +86,32 @@ const createNewCustomerIntoDb = (data) => __awaiter(void 0, void 0, void 0, func
         email: newCustomer.email,
         role: client_1.UserRole.CUSTOMER,
     }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
+    const result = (0, sanitize_1.excludeSensitiveFields)(newCustomer, ["password"]);
     return {
         accessToken,
         refreshToken,
-        newCustomer
+        result
     };
 });
 // create new vendor
 const createNewVendorIntoDb = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
     const newVendor = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        yield tx.user.create({
+        const newUser = yield tx.user.create({
             data: {
+                name: data.name,
                 email: data.email,
                 password: hashedPassword,
                 role: client_1.UserRole.VENDOR,
             }
         });
-        const vendor = yield tx.vendor.create({
+        yield tx.vendor.create({
             data: {
-                shopName: data.shopName,
-                email: data.email,
-                logo: data.logo,
-                description: data.description,
+                name: data.name,
+                userId: newUser.id
             }
         });
-        return vendor;
+        return newUser;
     }));
     const accessToken = jwt_helpers_1.jwtHelpers.generateToken({
         id: newVendor.id,
@@ -119,10 +123,11 @@ const createNewVendorIntoDb = (data) => __awaiter(void 0, void 0, void 0, functi
         email: newVendor.email,
         role: client_1.UserRole.VENDOR,
     }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
+    const result = (0, sanitize_1.excludeSensitiveFields)(newVendor, ["password"]);
     return {
         accessToken,
         refreshToken,
-        newVendor
+        result
     };
 });
 exports.UserService = {

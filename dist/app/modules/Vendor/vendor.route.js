@@ -12,9 +12,9 @@ const send_image_to_cloudinary_1 = require("../../../utils/send-image-to-cloudin
 const api_error_1 = __importDefault(require("../../../errors/api-error"));
 const http_status_codes_1 = require("http-status-codes");
 const router = express_1.default.Router();
-router.get("/", (0, auth_1.default)(client_1.UserRole.ADMIN), vendor_controller_1.VendorController.getAllVendors);
-router.get("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.VENDOR), vendor_controller_1.VendorController.singleVendor);
-router.patch("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.VENDOR), send_image_to_cloudinary_1.upload.single('file'), send_image_to_cloudinary_1.sendImageToCloudinary, (req, res, next) => {
+router.get("/", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN), vendor_controller_1.VendorController.getAllVendors);
+router.get("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN, client_1.UserRole.VENDOR), vendor_controller_1.VendorController.singleVendor);
+router.patch("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN, client_1.UserRole.VENDOR), send_image_to_cloudinary_1.upload.single('file'), send_image_to_cloudinary_1.sendImageToCloudinary, (req, res, next) => {
     var _a;
     try {
         if ((_a = req.body) === null || _a === void 0 ? void 0 : _a.data) {
@@ -26,5 +26,5 @@ router.patch("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserR
         next(new api_error_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid JSON data in req.body.data"));
     }
 }, vendor_controller_1.VendorController.updateVendor);
-router.delete("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.VENDOR), vendor_controller_1.VendorController.deleteVendor);
+router.delete("/:id", (0, auth_1.default)(client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN, client_1.UserRole.VENDOR), vendor_controller_1.VendorController.deleteVendor);
 exports.vendorRoutes = router;

@@ -26,13 +26,12 @@ const loginUserIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function*
         where: {
             email: payload.email,
             status: client_1.UserStatus.ACTIVE,
-        },
+        }
     });
     const isCorrectPassword = yield bcrypt_1.default.compare(payload.password, userData.password);
     if (!isCorrectPassword) {
         throw new api_error_1.default(401, "Password is incorrect");
     }
-    ;
     const accessToken = jwt_helpers_1.jwtHelpers.generateToken({
         id: userData.id,
         email: userData.email,
@@ -47,7 +46,7 @@ const loginUserIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function*
     return {
         accessToken,
         refreshToken,
-        userWithoutSensitiveData
+        user: userWithoutSensitiveData
     };
 });
 // refresh token

@@ -1,4 +1,3 @@
-import { ShippingDetails } from './../../../../node_modules/.pnpm/@prisma+client@6.3.0_prisma@6.3.0_typescript@5.7.3__typescript@5.7.3/node_modules/.prisma/client/index.d';
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../../errors/api-error";
 import prisma from "../../../shared/prisma";

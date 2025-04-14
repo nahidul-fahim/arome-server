@@ -16,8 +16,38 @@ const http_status_codes_1 = require("http-status-codes");
 const geolocation_data_1 = require("../src/data/geolocation-data");
 const api_error_1 = __importDefault(require("../src/errors/api-error"));
 const prisma_1 = __importDefault(require("../src/shared/prisma"));
+const client_1 = require("@prisma/client");
+const password_hashing_1 = require("./utils/password-hashing");
 function seedMain() {
     return __awaiter(this, void 0, void 0, function* () {
+        const existingSuperAdmin = yield prisma_1.default.user.findFirst({
+            where: {
+                role: client_1.UserRole.SUPER_ADMIN,
+                isDeleted: false
+            }
+        });
+        if (!existingSuperAdmin) {
+            const hashedPassword = yield (0, password_hashing_1.hashPassword)("super_admin123");
+            const superAdmin = yield prisma_1.default.$transaction((tx) => __awaiter(this, void 0, void 0, function* () {
+                const newUser = yield tx.user.create({
+                    data: {
+                        name: "The Super Prime",
+                        email: "superadmin@rihlah.com",
+                        password: hashedPassword,
+                        role: client_1.UserRole.SUPER_ADMIN,
+                    }
+                });
+                yield tx.admin.create({
+                    data: {
+                        name: newUser === null || newUser === void 0 ? void 0 : newUser.name,
+                        userId: newUser === null || newUser === void 0 ? void 0 : newUser.id
+                    }
+                });
+                return newUser;
+            }));
+            console.log("Super Admin created successfully!");
+            return superAdmin;
+        }
         const createdRegions = yield Promise.all(geolocation_data_1.allRegion.map((region) => __awaiter(this, void 0, void 0, function* () {
             return yield prisma_1.default.region.upsert({
                 where: { name: region.name },

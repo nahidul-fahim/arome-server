@@ -1,12 +1,11 @@
 import { UserStatus } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import { excludeSensitiveFields } from "../../../utils/sanitize";
-import bcrypt from "bcrypt";
 import ApiError from "../../../errors/api-error";
 import { jwtHelpers } from "../../../helpers/jwt-helpers";
 import config from "../../../config";
 import { Secret } from "jsonwebtoken";
-import { userSelectFields } from "./auth.constant";
+import { checkPassword } from "../../../utils/password-hashing";
 
 // login user into db
 const loginUserIntoDb = async (payload: { email: string; password: string }) => {
@@ -17,7 +16,7 @@ const loginUserIntoDb = async (payload: { email: string; password: string }) => 
     }
   });
 
-  const isCorrectPassword = await bcrypt.compare(payload.password, userData.password);
+  const isCorrectPassword = await checkPassword(payload.password, userData.password);
   if (!isCorrectPassword) {
     throw new ApiError(401, "Password is incorrect");
   }

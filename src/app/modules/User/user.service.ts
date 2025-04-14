@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import prisma from "../../../shared/prisma";
 import { UserRole } from '@prisma/client';
 import { jwtHelpers } from '../../../helpers/jwt-helpers';
@@ -6,10 +5,11 @@ import { Secret } from 'jsonwebtoken';
 import config from '../../../config';
 import { IVendor } from '../Vendor/vendor.interface';
 import { excludeSensitiveFields } from '../../../utils/sanitize';
+import { hashPassword } from "../../../utils/password-hashing";
 
 // create admin
 const createNewAdminIntoDb = async (data: any) => {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const hashedPassword = await hashPassword(data?.password);
   const newAdmin = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
@@ -57,7 +57,7 @@ const createNewAdminIntoDb = async (data: any) => {
 
 // create new customer
 const createNewCustomerIntoDb = async (data: any) => {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const hashedPassword = await hashPassword(data?.password);
   const newCustomer = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
@@ -106,7 +106,7 @@ const createNewCustomerIntoDb = async (data: any) => {
 
 // create new vendor
 const createNewVendorIntoDb = async (data: IVendor) => {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const hashedPassword = await hashPassword(data?.password);
   const newVendor = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {

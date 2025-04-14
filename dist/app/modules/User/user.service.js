@@ -13,15 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const client_1 = require("@prisma/client");
 const jwt_helpers_1 = require("../../../helpers/jwt-helpers");
 const config_1 = __importDefault(require("../../../config"));
 const sanitize_1 = require("../../../utils/sanitize");
+const password_hashing_1 = require("../../../utils/password-hashing");
 // create admin
 const createNewAdminIntoDb = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
+    const hashedPassword = yield (0, password_hashing_1.hashPassword)(data === null || data === void 0 ? void 0 : data.password);
     const newAdmin = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const newUser = yield tx.user.create({
             data: {
@@ -58,7 +58,7 @@ const createNewAdminIntoDb = (data) => __awaiter(void 0, void 0, void 0, functio
 });
 // create new customer
 const createNewCustomerIntoDb = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
+    const hashedPassword = yield (0, password_hashing_1.hashPassword)(data === null || data === void 0 ? void 0 : data.password);
     const newCustomer = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const newUser = yield tx.user.create({
             data: {
@@ -95,7 +95,7 @@ const createNewCustomerIntoDb = (data) => __awaiter(void 0, void 0, void 0, func
 });
 // create new vendor
 const createNewVendorIntoDb = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
+    const hashedPassword = yield (0, password_hashing_1.hashPassword)(data === null || data === void 0 ? void 0 : data.password);
     const newVendor = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const newUser = yield tx.user.create({
             data: {

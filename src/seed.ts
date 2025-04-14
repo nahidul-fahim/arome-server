@@ -2,8 +2,44 @@ import { StatusCodes } from "http-status-codes";
 import { allCity, allDistrict, allRegion } from "../src/data/geolocation-data";
 import ApiError from "../src/errors/api-error";
 import prisma from "../src/shared/prisma";
+import { UserRole } from "@prisma/client";
+import { hashPassword } from "./utils/password-hashing";
 
 async function seedMain() {
+    const existingSuperAdmin = await prisma.user.findFirst({
+        where: {
+            role: UserRole.SUPER_ADMIN,
+            isDeleted: false
+        }
+    });
+
+    if (!existingSuperAdmin) {
+        const hashedPassword = await hashPassword("super_admin123");
+        const superAdmin = await prisma.$transaction(async (tx) => {
+            const newUser = await tx.user.create({
+                data: {
+                    name: "The Super Prime",
+                    email: "superadmin@rihlah.com",
+                    password: hashedPassword,
+                    role: UserRole.SUPER_ADMIN,
+                }
+            });
+
+            await tx.admin.create({
+                data: {
+                    name: newUser?.name as string,
+                    userId: newUser?.id
+                }
+            });
+
+            return newUser;
+        });
+
+        console.log("Super Admin created successfully!");
+        return superAdmin;
+    }
+
+
     const createdRegions = await Promise.all(
         allRegion.map(async (region) => {
             return await prisma.region.upsert({

@@ -16,10 +16,10 @@ exports.AuthServices = void 0;
 const client_1 = require("@prisma/client");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const sanitize_1 = require("../../../utils/sanitize");
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const api_error_1 = __importDefault(require("../../../errors/api-error"));
 const jwt_helpers_1 = require("../../../helpers/jwt-helpers");
 const config_1 = __importDefault(require("../../../config"));
+const password_hashing_1 = require("../../../utils/password-hashing");
 // login user into db
 const loginUserIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
@@ -28,7 +28,7 @@ const loginUserIntoDb = (payload) => __awaiter(void 0, void 0, void 0, function*
             status: client_1.UserStatus.ACTIVE,
         }
     });
-    const isCorrectPassword = yield bcrypt_1.default.compare(payload.password, userData.password);
+    const isCorrectPassword = yield (0, password_hashing_1.checkPassword)(payload.password, userData.password);
     if (!isCorrectPassword) {
         throw new api_error_1.default(401, "Password is incorrect");
     }
